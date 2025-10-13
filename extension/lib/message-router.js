@@ -1,0 +1,104 @@
+/**
+ * Message Router
+ * Handles message passing between extension components
+ */
+
+export class MessageRouter {
+  constructor() {
+    this.handlers = new Map();
+  }
+
+  /**
+   * Register a message handler
+   * @param {string} action - The action type
+   * @param {Function} handler - The handler function
+   */
+  register(action, handler) {
+    this.handlers.set(action, handler);
+  }
+
+  /**
+   * Route a message to the appropriate handler
+   * @param {Object} message - The message object
+   * @param {Object} sender - The message sender
+   * @returns {Promise<any>} - The handler result
+   */
+  async route(message, sender) {
+    const { action, data, requestId } = message;
+
+    if (!this.handlers.has(action)) {
+      throw new Error(`No handler registered for action: ${action}`);
+    }
+
+    const handler = this.handlers.get(action);
+    const result = await handler(data, sender);
+
+    return {
+      requestId,
+      result,
+      timestamp: Date.now()
+    };
+  }
+
+  /**
+   * Send a message to a specific tab
+   * @param {number} tabId - The tab ID
+   * @param {string} action - The action type
+   * @param {Object} data - The message data
+   * @returns {Promise<any>} - The response
+   */
+  static async sendToTab(tabId, action, data) {
+    return new Promise((resolve, reject) => {
+      chrome.tabs.sendMessage(
+        tabId,
+        {
+          action,
+          data,
+          requestId: this.generateRequestId(),
+          timestamp: Date.now()
+        },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+          } else {
+            resolve(response);
+          }
+        }
+      );
+    });
+  }
+
+  /**
+   * Send a message to the background script
+   * @param {string} action - The action type
+   * @param {Object} data - The message data
+   * @returns {Promise<any>} - The response
+   */
+  static async sendToBackground(action, data) {
+    return new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage(
+        {
+          action,
+          data,
+          requestId: this.generateRequestId(),
+          timestamp: Date.now()
+        },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+          } else {
+            resolve(response);
+          }
+        }
+      );
+    });
+  }
+
+  /**
+   * Generate a unique request ID
+   * @returns {string} - A unique ID
+   */
+  static generateRequestId() {
+    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  }
+}

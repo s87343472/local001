@@ -1,0 +1,14 @@
+/**
+ * Content Script Styles
+ * Placeholder for Issue #5 - Floating Button UI
+ */
+
+/* Translation styles will be added here */
+.translation {
+  color: #666666;
+  font-style: italic;
+  margin-top: 4px;
+}
+
+/* Floating button styles (Issue #5) */
+/* TODO: Implement floating button styles */
