@@ -34,8 +34,15 @@ class PopupManager {
       btnStats: document.getElementById('btn-stats'),
       blacklistNotice: document.getElementById('blacklist-notice')
     };
+  }
 
-    this.init();
+  /**
+   * Static factory method to create and initialize PopupManager
+   */
+  static async create() {
+    const manager = new PopupManager();
+    await manager.init();
+    return manager;
   }
 
   /**
@@ -391,9 +398,18 @@ class PopupManager {
 
 // Initialize popup when DOM is ready
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    new PopupManager();
+  document.addEventListener('DOMContentLoaded', async () => {
+    try {
+      await PopupManager.create();
+      console.log('Popup initialized successfully');
+    } catch (error) {
+      console.error('Failed to initialize popup:', error);
+    }
   });
 } else {
-  new PopupManager();
+  PopupManager.create().then(() => {
+    console.log('Popup initialized successfully');
+  }).catch(error => {
+    console.error('Failed to initialize popup:', error);
+  });
 }
