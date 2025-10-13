@@ -27,6 +27,13 @@ chrome.runtime.onInstalled.addListener(async (details) => {
   } else if (details.reason === 'update') {
     console.log('Extension updated to version:', chrome.runtime.getManifest().version);
   }
+
+  // Create context menu (for all install reasons)
+  chrome.contextMenus.create({
+    id: 'translate-selection',
+    title: 'Translate selection',
+    contexts: ['selection']
+  });
 });
 
 // Keep service worker alive
@@ -106,20 +113,17 @@ async function handleMessage(message, sender) {
   }
 }
 
-// Context menu setup (optional)
-chrome.runtime.onInstalled.addListener(() => {
-  chrome.contextMenus.create({
-    id: 'translate-selection',
-    title: 'Translate selection',
-    contexts: ['selection']
-  });
-});
-
+// Context menu click handler
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === 'translate-selection') {
     chrome.tabs.sendMessage(tab.id, {
       action: 'TRANSLATE_SELECTION',
       data: { text: info.selectionText }
+    }, (response) => {
+      if (chrome.runtime.lastError) {
+        console.error('Failed to send message to tab:', chrome.runtime.lastError.message);
+        // Content script might not be loaded on this page (chrome://, file://, etc.)
+      }
     });
   }
 });

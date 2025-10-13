@@ -98,7 +98,10 @@ class PopupManager {
    * Update page information display
    */
   updatePageInfo() {
-    if (!this.currentTab) return;
+    if (!this.currentTab || !this.currentTab.url) {
+      this.elements.currentPage.textContent = 'No URL available';
+      return;
+    }
 
     try {
       const url = new URL(this.currentTab.url);

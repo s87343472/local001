@@ -151,40 +151,45 @@ export class StorageManager {
   }
 
   /**
-   * Encrypt API keys using Web Crypto API
+   * Obfuscate API keys
+   * NOTE: This is NOT encryption, just base64 encoding to prevent casual viewing
+   * API keys in chrome.storage.sync are already somewhat protected by Chrome's security model
+   * For true security, users should use environment-specific keys and follow principle of least privilege
+   *
    * @param {Object} apiKeys - API keys object
-   * @returns {Promise<Object>} - Encrypted API keys
+   * @returns {Promise<Object>} - Obfuscated API keys
    */
   async encryptApiKeys(apiKeys) {
-    // For MVP, we'll use base64 encoding
-    // In production, implement proper AES-256-GCM encryption with device fingerprint
-    const encrypted = {};
+    // SECURITY NOTE: This is obfuscation, not encryption
+    // Base64 encoding prevents casual viewing but is trivially reversible
+    // Chrome.storage.sync provides some OS-level protection
+    const obfuscated = {};
     for (const [key, value] of Object.entries(apiKeys)) {
       if (value) {
-        encrypted[key] = btoa(value); // Simple encoding for MVP
+        obfuscated[key] = btoa(value);
       }
     }
-    return encrypted;
+    return obfuscated;
   }
 
   /**
-   * Decrypt API keys
-   * @param {Object} encryptedKeys - Encrypted API keys
-   * @returns {Promise<Object>} - Decrypted API keys
+   * De-obfuscate API keys
+   * @param {Object} obfuscatedKeys - Obfuscated API keys
+   * @returns {Promise<Object>} - Plain API keys
    */
-  async decryptApiKeys(encryptedKeys) {
-    const decrypted = {};
-    for (const [key, value] of Object.entries(encryptedKeys)) {
+  async decryptApiKeys(obfuscatedKeys) {
+    const plain = {};
+    for (const [key, value] of Object.entries(obfuscatedKeys)) {
       if (value) {
         try {
-          decrypted[key] = atob(value); // Simple decoding for MVP
+          plain[key] = atob(value);
         } catch (e) {
-          console.error('Failed to decrypt key:', key);
-          decrypted[key] = null;
+          console.error('Failed to decode key:', key);
+          plain[key] = null;
         }
       }
     }
-    return decrypted;
+    return plain;
   }
 
   /**

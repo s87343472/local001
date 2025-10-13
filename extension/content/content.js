@@ -63,33 +63,27 @@ async function analyzePage() {
 
 /**
  * Check cache for existing translations
+ * Optimized to check all paragraphs in parallel
  * @param {Array<Object>} paragraphs - Array of paragraph objects
  * @returns {Promise<Array<Object>>} - Paragraphs with cache status
  */
 async function checkCache(paragraphs) {
-  const results = [];
+  // Check all paragraphs in parallel instead of sequentially
+  const promises = paragraphs.map(para =>
+    MessageRouter.sendToBackground('GET_FROM_CACHE', { hash: para.hash })
+      .catch(error => {
+        console.warn('Cache check failed for hash:', para.hash, error);
+        return { success: false, result: null };
+      })
+  );
 
-  for (const para of paragraphs) {
-    try {
-      // Request cache check from background
-      const response = await MessageRouter.sendToBackground('GET_FROM_CACHE', {
-        hash: para.hash
-      });
+  const responses = await Promise.all(promises);
 
-      results.push({
-        ...para,
-        cached: response.success && response.result !== null,
-        translation: response.result?.translation || null
-      });
-    } catch (error) {
-      console.warn('Cache check failed for hash:', para.hash, error);
-      results.push({
-        ...para,
-        cached: false,
-        translation: null
-      });
-    }
-  }
+  const results = paragraphs.map((para, i) => ({
+    ...para,
+    cached: responses[i].success && responses[i].result !== null,
+    translation: responses[i].result?.translation || null
+  }));
 
   const cachedCount = results.filter(p => p.cached).length;
   if (cachedCount > 0) {
