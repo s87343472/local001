@@ -35,7 +35,7 @@
     {
       "matches": ["https://*/*"],
       "js": ["content/content.js"],
-      "css": ["content/content.css"],
+      "css": ["content/content.css", "content/floating-button.css"],
       "run_at": "document_idle"
     }
   ],

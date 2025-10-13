@@ -88,6 +88,14 @@ async function handleMessage(message, sender) {
         await storage.addToCache(data.hash, data.translation);
         return { success: true };
 
+      case 'OPEN_OPTIONS':
+        let url = chrome.runtime.getURL('options/options.html');
+        if (data?.tab) {
+          url += `?tab=${data.tab}`;
+        }
+        chrome.tabs.create({ url });
+        return { success: true };
+
       default:
         console.warn('Unknown action:', action);
         return { success: false, error: 'Unknown action' };

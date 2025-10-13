@@ -6,14 +6,25 @@
 import { MessageRouter } from '../lib/message-router.js';
 import { ContentDetector } from '../lib/content-detector.js';
 import { BillingualRenderer } from '../lib/renderer.js';
+import { FloatingButton } from './floating-button.js';
 
 console.log('Content script loaded - Chrome Smart Translation Assistant');
 
 // Initialize
 const detector = new ContentDetector();
 const renderer = new BillingualRenderer();
+const floatingButton = new FloatingButton();
 let currentAnalysis = null;
 let isTranslating = false;
+
+// Inject floating button when page loads
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    floatingButton.inject();
+  });
+} else {
+  floatingButton.inject();
+}
 
 /**
  * Analyze the current page
@@ -155,6 +166,7 @@ async function translatePage() {
   }
 
   isTranslating = true;
+  floatingButton.setState('translating');
 
   try {
     // Step 1: Analyze page
@@ -162,6 +174,7 @@ async function translatePage() {
 
     if (currentAnalysis.count === 0) {
       console.warn('No translatable content found');
+      floatingButton.setState('error');
       return;
     }
 
@@ -169,12 +182,15 @@ async function translatePage() {
     const translatedParagraphs = await requestTranslation(currentAnalysis.paragraphs);
 
     // Step 3: Render translations
-    renderTranslations(translatedParagraphs);
+    await renderTranslations(translatedParagraphs);
+
+    floatingButton.setState('translated');
+    await floatingButton.updateStats();
 
     console.log('Translation complete!');
   } catch (error) {
     console.error('Translation failed:', error);
-    // TODO: Show error UI
+    floatingButton.setState('error');
   } finally {
     isTranslating = false;
   }
