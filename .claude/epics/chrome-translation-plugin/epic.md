@@ -4,7 +4,7 @@ status: backlog
 created: 2025-10-13T02:48:46Z
 progress: 0%
 prd: .claude/prds/chrome-translation-plugin.md
-github: [Will be updated when synced to GitHub]
+github: https://github.com/s87343472/local001/issues/1
 ---
 
 # Epic: Chrome Smart Translation Assistant
@@ -186,20 +186,23 @@ Output format: ["translation1", "translation2", ...]
 - **Performance Tests**: First paint <2s, full page <10s on median hardware
 - **Security Tests**: API key encryption, XSS prevention, CSP compliance
 
-## Task Breakdown Preview
+## Tasks Created
 
-High-level task categories (aim for <10 total tasks):
+- [ ] #4 - Extension Infrastructure Setup (parallel: true)
+- [ ] #6 - Content Detection Engine (parallel: false, depends on #4)
+- [ ] #7 - Translation API Integration (parallel: true)
+- [ ] #2 - Bilingual Rendering Engine (parallel: false, depends on #6, #7)
+- [ ] #3 - Floating Button UI (parallel: true)
+- [ ] #5 - Settings & Configuration Page (parallel: true)
+- [ ] #8 - Popup Interface (parallel: true)
+- [ ] #9 - Security & Privacy Implementation (parallel: true)
+- [ ] #10 - Testing & Cross-Site Compatibility (parallel: false, depends on all)
+- [ ] #11 - Documentation & Chrome Web Store Publishing (parallel: false, depends on #10)
 
-- [ ] **T1: Extension Infrastructure** - Manifest V3 setup, service worker, message passing, storage modules
-- [ ] **T2: Content Detection Engine** - DOM parsing, paragraph extraction, filter rules, cache integration
-- [ ] **T3: Translation API Integration** - Gemini API client, prompt engineering, Google Translate fallback, retry logic
-- [ ] **T4: Bilingual Rendering** - Progressive DOM insertion, styling, show/hide toggle, MutationObserver
-- [ ] **T5: Floating Button UI** - Position, states, animations, expand panel, user interactions
-- [ ] **T6: Settings & Configuration** - Options page, API key validation, preferences, blacklist management
-- [ ] **T7: Popup Interface** - Status display, quick controls, progress indicator
-- [ ] **T8: Security & Privacy** - API key encryption, CSP compliance, XSS prevention, blacklist enforcement
-- [ ] **T9: Testing & Compatibility** - Cross-site testing, performance profiling, bug fixes
-- [ ] **T10: Documentation & Publishing** - User guide, API key tutorial, Chrome Web Store materials
+**Total tasks**: 10
+**Parallel tasks**: 6 (#4, #7, #3, #5, #8, #9)
+**Sequential tasks**: 4 (#6, #2, #10, #11)
+**Estimated total effort**: 147-182 hours (~4-5 weeks with 2 developers)
 
 ## Dependencies
 
