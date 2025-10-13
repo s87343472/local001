@@ -54,7 +54,23 @@ async function handleMessage(message, sender) {
         return { success: true };
 
       case 'TRANSLATE_TEXT':
-        const result = await translationAPI.translate(data);
+        // Get user settings
+        const settings = await storage.getSettings();
+        const result = await translationAPI.translate({
+          ...data,
+          settings: settings.preferences
+        });
+        // Update statistics
+        await storage.updateStatistics(result.totalChars);
+        // Cache translations
+        for (const trans of result.translations) {
+          if (!trans.error && !trans.mock) {
+            await storage.addToCache(trans.hash, {
+              translation: trans.translation,
+              engine: trans.engine
+            });
+          }
+        }
         return { success: true, result };
 
       case 'VALIDATE_API_KEY':
