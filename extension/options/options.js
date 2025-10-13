@@ -18,15 +18,30 @@ class OptionsManager {
    * Initialize the options page
    */
   async init() {
-    await this.loadSettings();
-    this.initializeTabNavigation();
-    this.initializeEventListeners();
-    this.handleURLParameters();
+    console.log('[Options] Starting initialization...');
+    try {
+      console.log('[Options] Loading settings...');
+      await this.loadSettings();
 
-    // Show success message if coming from welcome
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('welcome')) {
-      this.showStatus('Welcome! Please configure your API key to start translating.', 'info');
+      console.log('[Options] Initializing tab navigation...');
+      this.initializeTabNavigation();
+
+      console.log('[Options] Initializing event listeners...');
+      this.initializeEventListeners();
+
+      console.log('[Options] Handling URL parameters...');
+      this.handleURLParameters();
+
+      // Show success message if coming from welcome
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('welcome')) {
+        this.showStatus('Welcome! Please configure your API key to start translating.', 'info');
+      }
+
+      console.log('[Options] Initialization complete!');
+    } catch (error) {
+      console.error('[Options] Initialization failed:', error);
+      throw error;
     }
   }
 
@@ -673,9 +688,24 @@ class OptionsManager {
   }
 }
 
-// Initialize when page loads
-document.addEventListener('DOMContentLoaded', () => {
-  new OptionsManager();
+// Error handler for module loading
+window.addEventListener('error', (e) => {
+  console.error('Global error:', e);
+  if (e.message && e.message.includes('module')) {
+    document.body.innerHTML = '<div style="padding: 40px; background: #f8d7da; color: #721c24; border-radius: 8px; margin: 20px; font-family: Arial, sans-serif;"><h2>⚠️ Settings Page Error</h2><p>Failed to load required modules. Please try:</p><ul><li>Refresh the page (Cmd/Ctrl + R)</li><li>Reload the extension from chrome://extensions/</li><li>Check browser console for details</li></ul></div>';
+  }
 });
 
-console.log('Options page initialized');
+console.log('Options module loaded successfully');
+
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    console.log('DOM ready, initializing OptionsManager...');
+    new OptionsManager();
+    console.log('OptionsManager initialized successfully');
+  } catch (error) {
+    console.error('Failed to initialize OptionsManager:', error);
+    document.body.innerHTML = '<div style="padding: 40px; background: #f8d7da; color: #721c24; border-radius: 8px; margin: 20px; font-family: Arial, sans-serif;"><h2>⚠️ Initialization Error</h2><p>' + error.message + '</p><p>Please reload the extension and try again.</p></div>';
+  }
+});
