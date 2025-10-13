@@ -3,7 +3,7 @@
  * Progressive rendering with viewport detection and dynamic content support
  */
 
-export class BillingualRenderer {
+class BillingualRenderer {
   constructor() {
     this.observer = null;
     this.mutationObserver = null;

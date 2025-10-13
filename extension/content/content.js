@@ -1,12 +1,13 @@
 /**
  * Content Script
  * Handles content detection, translation requests, and rendering
+ *
+ * Dependencies loaded via manifest.json content_scripts:
+ * - lib/message-router.js (MessageRouter)
+ * - lib/content-detector.js (ContentDetector)
+ * - lib/renderer.js (BillingualRenderer)
+ * - content/floating-button.js (FloatingButton)
  */
-
-import { MessageRouter } from '../lib/message-router.js';
-import { ContentDetector } from '../lib/content-detector.js';
-import { BillingualRenderer } from '../lib/renderer.js';
-import { FloatingButton } from './floating-button.js';
 
 console.log('Content script loaded - Chrome Smart Translation Assistant');
 

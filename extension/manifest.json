@@ -35,7 +35,13 @@
   "content_scripts": [
     {
       "matches": ["https://*/*"],
-      "js": ["content/content.js"],
+      "js": [
+        "lib/message-router.js",
+        "lib/content-detector.js",
+        "lib/renderer.js",
+        "content/floating-button.js",
+        "content/content.js"
+      ],
       "css": ["content/content.css", "content/floating-button.css"],
       "run_at": "document_idle"
     }

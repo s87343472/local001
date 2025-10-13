@@ -1,4 +1,4 @@
-export class FloatingButton {
+class FloatingButton {
   constructor() {
     this.container = null;
     this.button = null;

@@ -3,7 +3,7 @@
  * Handles message passing between extension components
  */
 
-export class MessageRouter {
+class MessageRouter {
   constructor() {
     this.handlers = new Map();
   }

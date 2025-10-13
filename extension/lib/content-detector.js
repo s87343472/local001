@@ -3,7 +3,7 @@
  * Identifies main content areas and extracts paragraphs for translation
  */
 
-export class ContentDetector {
+class ContentDetector {
   constructor() {
     // Priority-based selectors
     this.semanticSelectors = [
