@@ -177,16 +177,14 @@ class FloatingButton {
     this.closePanel();
 
     try {
-      const response = await chrome.runtime.sendMessage({
-        action: 'TRANSLATE_PAGE'
-      });
-
-      if (response.success) {
+      // Call translatePage() function from content.js directly
+      // Content scripts share global scope
+      if (typeof window.translatePage === 'function') {
+        await window.translatePage();
         this.setState('translated');
         await this.updateStats();
       } else {
-        this.setState('error');
-        console.error('Translation failed:', response.error);
+        throw new Error('translatePage function not found');
       }
     } catch (error) {
       this.setState('error');
@@ -196,13 +194,13 @@ class FloatingButton {
 
   async toggleTranslations() {
     try {
-      const response = await chrome.runtime.sendMessage({
-        action: 'TOGGLE_TRANSLATIONS'
-      });
-
-      if (response.success) {
+      // Call toggleTranslations() function from content.js directly
+      if (typeof window.toggleTranslations === 'function') {
+        window.toggleTranslations();
         await this.updateStats();
         this.updatePanelContent();
+      } else {
+        throw new Error('toggleTranslations function not found');
       }
     } catch (error) {
       console.error('Toggle failed:', error);
@@ -216,12 +214,9 @@ class FloatingButton {
 
   async updateStats() {
     try {
-      const response = await chrome.runtime.sendMessage({
-        action: 'GET_STATS'
-      });
-
-      if (response.success) {
-        this.stats = response.stats;
+      // Call getTranslationStats() function from content.js directly
+      if (typeof window.getTranslationStats === 'function') {
+        this.stats = window.getTranslationStats();
         this.updatePanelContent();
       }
     } catch (error) {

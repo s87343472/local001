@@ -299,5 +299,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 });
 
+// Expose functions to window for floating button access
+// Content scripts share global scope, but explicit assignment ensures availability
+window.translatePage = translatePage;
+window.toggleTranslations = toggleTranslations;
+window.getTranslationStats = () => renderer.getStats();
+
 // Page loaded - ready for commands
 console.log('Content script ready');
