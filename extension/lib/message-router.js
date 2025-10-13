@@ -102,3 +102,7 @@ class MessageRouter {
     return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }
 }
+
+// Export for ES6 modules (service worker, popup, options)
+// Content scripts load this via manifest.json and access class globally
+export { MessageRouter };

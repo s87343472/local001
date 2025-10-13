@@ -297,3 +297,7 @@ class BillingualRenderer {
     };
   }
 }
+
+// Export for ES6 modules
+// Content scripts load this via manifest.json and access class globally
+export { BillingualRenderer };
