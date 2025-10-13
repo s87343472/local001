@@ -64,6 +64,14 @@ async function handleMessage(message, sender) {
       case 'GET_STATISTICS':
         return await storage.getStatistics();
 
+      case 'GET_FROM_CACHE':
+        const cached = await storage.getFromCache(data.hash);
+        return { success: true, result: cached };
+
+      case 'ADD_TO_CACHE':
+        await storage.addToCache(data.hash, data.translation);
+        return { success: true };
+
       default:
         console.warn('Unknown action:', action);
         return { success: false, error: 'Unknown action' };

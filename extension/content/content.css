@@ -1,14 +1,52 @@
 /**
  * Content Script Styles
- * Placeholder for Issue #5 - Floating Button UI
+ * Styles for translation display and UI elements
  */
 
-/* Translation styles will be added here */
-.translation {
+/* Translation paragraph styles */
+.csta-translation {
   color: #666666;
   font-style: italic;
   margin-top: 4px;
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-left: 3px solid #4A90E2;
+  border-radius: 4px;
+  line-height: 1.6;
+  font-size: 0.95em;
 }
 
-/* Floating button styles (Issue #5) */
-/* TODO: Implement floating button styles */
+/* Mark translated elements */
+[data-translated="true"] {
+  position: relative;
+}
+
+/* Hover effect on original when translation exists */
+[data-translated="true"]:hover {
+  background-color: rgba(74, 144, 226, 0.05);
+}
+
+/* Hidden translations */
+.csta-translation[style*="display: none"] {
+  display: none !important;
+}
+
+/* Loading indicator (for future use) */
+.csta-loading {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #4A90E2;
+  border-radius: 50%;
+  animation: csta-spin 1s linear infinite;
+}
+
+@keyframes csta-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Floating button styles (placeholder for Issue #5) */
+/* TODO: Implement floating button styles in Issue #5 */
