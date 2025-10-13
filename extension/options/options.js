@@ -11,7 +11,16 @@ class OptionsManager {
     this.currentSettings = null;
     this.isLoading = false;
     this.isDirty = false;
-    this.init();
+    // Don't call init() synchronously - wait for it to be called from DOMContentLoaded
+  }
+
+  /**
+   * Static factory method to create and initialize OptionsManager
+   */
+  static async create() {
+    const manager = new OptionsManager();
+    await manager.init();
+    return manager;
   }
 
   /**
@@ -699,13 +708,13 @@ window.addEventListener('error', (e) => {
 console.log('Options module loaded successfully');
 
 // Initialize when page loads
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   try {
     console.log('DOM ready, initializing OptionsManager...');
-    new OptionsManager();
+    await OptionsManager.create();
     console.log('OptionsManager initialized successfully');
   } catch (error) {
     console.error('Failed to initialize OptionsManager:', error);
-    document.body.innerHTML = '<div style="padding: 40px; background: #f8d7da; color: #721c24; border-radius: 8px; margin: 20px; font-family: Arial, sans-serif;"><h2>⚠️ Initialization Error</h2><p>' + error.message + '</p><p>Please reload the extension and try again.</p></div>';
+    document.body.innerHTML = '<div style="padding: 40px; background: #f8d7da; color: #721c24; border-radius: 8px; margin: 20px; font-family: Arial, sans-serif;"><h2>⚠️ Initialization Error</h2><p>' + error.message + '</p><p>Error details: ' + error.stack + '</p><p>Please reload the extension and try again.</p></div>';
   }
 });
