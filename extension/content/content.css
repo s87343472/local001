@@ -15,6 +15,46 @@
   border-radius: 4px;
   line-height: 1.6;
   font-size: 0.95em;
+  transition: all 0.2s ease;
+  animation: csta-fade-in 0.3s ease;
+}
+
+/* Fade in animation for new translations */
+@keyframes csta-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mock translation warning */
+.csta-translation.csta-mock {
+  background: #fff3cd;
+  border-left-color: #f0ad4e;
+  cursor: help;
+}
+
+/* Engine badge (optional) */
+.csta-translation[data-engine="gemini"]::after {
+  content: "Gemini";
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  font-size: 0.7em;
+  background: #4A90E2;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 3px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.csta-translation[data-engine="gemini"]:hover::after {
+  opacity: 0.7;
 }
 
 /* Mark translated elements */
@@ -25,6 +65,7 @@
 /* Hover effect on original when translation exists */
 [data-translated="true"]:hover {
   background-color: rgba(74, 144, 226, 0.05);
+  transition: background-color 0.2s;
 }
 
 /* Hidden translations */
@@ -32,7 +73,40 @@
   display: none !important;
 }
 
-/* Loading indicator (for future use) */
+/* Responsive design */
+@media (max-width: 768px) {
+  .csta-translation {
+    font-size: 0.9em;
+    padding: 6px 10px;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .csta-translation {
+    background: #1e1e1e;
+    color: #b0b0b0;
+    border-left-color: #5A9FE2;
+  }
+
+  .csta-translation.csta-mock {
+    background: #3d3520;
+    border-left-color: #d4933c;
+  }
+
+  [data-translated="true"]:hover {
+    background-color: rgba(90, 159, 226, 0.1);
+  }
+}
+
+/* Print styles - hide translations in print */
+@media print {
+  .csta-translation {
+    display: none !important;
+  }
+}
+
+/* Loading indicator */
 .csta-loading {
   display: inline-block;
   width: 16px;

@@ -5,11 +5,13 @@
 
 import { MessageRouter } from '../lib/message-router.js';
 import { ContentDetector } from '../lib/content-detector.js';
+import { BillingualRenderer } from '../lib/renderer.js';
 
 console.log('Content script loaded - Chrome Smart Translation Assistant');
 
 // Initialize
 const detector = new ContentDetector();
+const renderer = new BillingualRenderer();
 let currentAnalysis = null;
 let isTranslating = false;
 
@@ -121,39 +123,26 @@ async function requestTranslation(paragraphs) {
 }
 
 /**
- * Render translations on the page
+ * Render translations on the page with progressive rendering
  * @param {Array<Object>} paragraphs - Paragraphs with translations
  */
-function renderTranslations(paragraphs) {
-  console.log('Rendering translations...');
+async function renderTranslations(paragraphs) {
+  console.log('Rendering translations with progressive strategy...');
 
-  let renderedCount = 0;
+  const startTime = performance.now();
 
-  for (const para of paragraphs) {
-    if (!para.translation || !para.element) continue;
+  // Use progressive rendering
+  const renderedCount = await renderer.renderProgressive(paragraphs);
 
-    // Check if already rendered
-    const existingTranslation = para.element.nextElementSibling;
-    if (existingTranslation && existingTranslation.classList.contains('csta-translation')) {
-      continue;
-    }
+  const endTime = performance.now();
+  const renderTime = Math.round(endTime - startTime);
 
-    // Create translation element
-    const translationEl = document.createElement('div');
-    translationEl.className = 'csta-translation';
-    translationEl.textContent = para.translation;
-    translationEl.setAttribute('data-hash', para.hash);
+  console.log(`Rendered ${renderedCount} translations in ${renderTime}ms`);
 
-    // Insert after original element
-    para.element.parentNode.insertBefore(translationEl, para.element.nextSibling);
-
-    // Mark original as translated
-    para.element.setAttribute('data-translated', 'true');
-
-    renderedCount++;
+  // Setup MutationObserver for dynamic content
+  if (currentAnalysis?.mainContent) {
+    renderer.setupMutationObserver(currentAnalysis.mainContent, handleDynamicContent);
   }
-
-  console.log(`Rendered ${renderedCount} translations`);
 }
 
 /**
@@ -195,14 +184,42 @@ async function translatePage() {
  * Toggle translation visibility
  */
 function toggleTranslations() {
-  const translations = document.querySelectorAll('.csta-translation');
-  const isVisible = translations.length > 0 && translations[0].style.display !== 'none';
+  const isVisible = renderer.toggleVisibility();
+  return isVisible;
+}
 
-  translations.forEach(el => {
-    el.style.display = isVisible ? 'none' : 'block';
-  });
+/**
+ * Handle dynamically added content
+ * @param {Array} addedNodes - New DOM nodes
+ */
+async function handleDynamicContent(addedNodes) {
+  if (!renderer.isTranslationActive) return;
 
-  console.log(`Translations ${isVisible ? 'hidden' : 'shown'}`);
+  console.log('Processing dynamic content...');
+
+  // Extract paragraphs from new nodes
+  const newParagraphs = [];
+
+  for (const node of addedNodes) {
+    if (node.nodeType !== Node.ELEMENT_NODE) continue;
+
+    // Use detector to extract paragraphs from this node
+    const paragraphs = detector.extractParagraphs(node);
+    newParagraphs.push(...paragraphs);
+  }
+
+  if (newParagraphs.length === 0) return;
+
+  console.log(`Found ${newParagraphs.length} new paragraphs in dynamic content`);
+
+  // Check cache and translate if needed
+  try {
+    const paragraphsWithCache = await checkCache(newParagraphs);
+    const translatedParagraphs = await requestTranslation(paragraphsWithCache);
+    await renderer.renderProgressive(translatedParagraphs);
+  } catch (error) {
+    console.error('Failed to translate dynamic content:', error);
+  }
 }
 
 // Message handling from background/popup
@@ -219,8 +236,20 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       return true; // Async response
 
     case 'TOGGLE_TRANSLATIONS':
-      toggleTranslations();
+      const isVisible = toggleTranslations();
+      sendResponse({ success: true, isVisible });
+      break;
+
+    case 'CLEAR_TRANSLATIONS':
+      renderer.clearAll();
+      renderer.stopObserving();
+      currentAnalysis = null;
       sendResponse({ success: true });
+      break;
+
+    case 'GET_STATS':
+      const stats = renderer.getStats();
+      sendResponse({ success: true, stats });
       break;
 
     case 'ANALYZE_PAGE':
