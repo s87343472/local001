@@ -103,5 +103,6 @@ class MessageRouter {
   }
 }
 
-// For content scripts only - no exports allowed
-// ES6 modules should import from message-router-es6.js instead
+// Export for ES6 modules (service worker, popup, options)
+// Content scripts load this via manifest.json and access class globally
+export { MessageRouter };

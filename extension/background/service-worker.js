@@ -4,7 +4,7 @@
  */
 
 import { StorageManager } from '../lib/storage.js';
-import { MessageRouter } from '../lib/message-router.js';
+import { MessageRouter } from '../lib/message-router-es6.js';
 import { TranslationAPI } from '../lib/translation-api.js';
 
 // Initialize managers

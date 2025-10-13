@@ -3,7 +3,7 @@
  * Implements the popup interface functionality for Chrome Smart Translation Assistant
  */
 
-import { MessageRouter } from '../lib/message-router.js';
+import { MessageRouter } from '../lib/message-router-es6.js';
 import { StorageManager } from '../lib/storage.js';
 
 console.log('Popup loaded - Chrome Smart Translation Assistant');

@@ -9,12 +9,22 @@
  * - content/floating-button.js (FloatingButton)
  */
 
-console.log('Content script loaded - Chrome Smart Translation Assistant');
+console.log('[Content Script] Loading...');
+console.log('[Content Script] Testing class availability:', {
+  MessageRouter: typeof MessageRouter,
+  ContentDetector: typeof ContentDetector,
+  BillingualRenderer: typeof BillingualRenderer,
+  FloatingButton: typeof FloatingButton
+});
 
 // Initialize
+console.log('[Content Script] Creating detector...');
 const detector = new ContentDetector();
+console.log('[Content Script] Creating renderer...');
 const renderer = new BillingualRenderer();
+console.log('[Content Script] Creating floating button...');
 const floatingButton = new FloatingButton();
+console.log('[Content Script] All components initialized successfully');
 let currentAnalysis = null;
 let isTranslating = false;
 

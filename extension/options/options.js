@@ -4,7 +4,7 @@
  * preferences management, display settings, blacklist, and statistics
  */
 
-import { MessageRouter } from '../lib/message-router.js';
+import { MessageRouter } from '../lib/message-router-es6.js';
 
 class OptionsManager {
   constructor() {
