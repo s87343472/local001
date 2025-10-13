@@ -1,8 +1,9 @@
 ---
 name: chrome-translation-plugin
-status: backlog
+status: in_progress
 created: 2025-10-13T02:48:46Z
-progress: 0%
+updated: 2025-10-13T11:35:00Z
+progress: 70%
 prd: .claude/prds/chrome-translation-plugin.md
 github: https://github.com/s87343472/local001/issues/1
 ---
