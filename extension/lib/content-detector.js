@@ -223,24 +223,29 @@ class ContentDetector {
    * @returns {number} - NodeFilter result
    */
   shouldProcessNode(node) {
+    const tagName = node.tagName ? node.tagName.toLowerCase() : '';
+
     // Check if element or parent matches exclude selectors
     for (const selector of this.excludeSelectors) {
       if (node.matches && node.matches(selector)) {
+        console.log(`[ContentDetector] REJECTED ${tagName} - matches exclude selector: ${selector}`);
         return NodeFilter.FILTER_REJECT;
       }
       if (node.closest && node.closest(selector)) {
+        console.log(`[ContentDetector] REJECTED ${tagName} - parent matches exclude selector: ${selector}`);
         return NodeFilter.FILTER_REJECT;
       }
     }
 
     // Only process paragraph-like elements
-    const tagName = node.tagName.toLowerCase();
     const paragraphTags = ['p', 'div', 'section', 'article', 'li', 'dd', 'dt', 'td', 'th', 'blockquote'];
 
     if (paragraphTags.includes(tagName)) {
+      console.log(`[ContentDetector] ACCEPTED ${tagName} - is paragraph-like element`);
       return NodeFilter.FILTER_ACCEPT;
     }
 
+    console.log(`[ContentDetector] SKIPPED ${tagName} - not a paragraph-like element`);
     return NodeFilter.FILTER_SKIP;
   }
 
