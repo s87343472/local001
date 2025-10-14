@@ -162,23 +162,16 @@ export class TranslationAPI {
 
     const texts = paragraphs.map(p => p.text);
 
-    return `You are a professional ${domain} translator.
+    return `Translate the following English texts to ${langName}.
 
-Task: Translate English to ${langName}.
-
-Requirements:
-1. Accurate technical terminology for ${domain} domain
-2. Maintain the original tone and style
-3. Use context to disambiguate words
-4. Output ONLY a JSON array, nothing else
-
-${dictionary ? `Technical terminology (${domain}):\n${dictionary}\n` : ''}
-Input texts (${texts.length} paragraphs):
+${dictionary ? `Use these technical terms (${domain} domain):\n${dictionary}\n\n` : ''}
+Input (${texts.length} texts):
 ${JSON.stringify(texts, null, 2)}
 
-Output format: ["translation1", "translation2", ...]
+Output: Return ONLY a JSON array of translations, one for each input text.
+Example: ["翻译1", "翻译2", "翻译3"]
 
-IMPORTANT: Return ONLY the JSON array, no explanations or additional text.`;
+Do NOT add explanations, labels, or any other text. Only return the JSON array.`;
   }
 
   /**
