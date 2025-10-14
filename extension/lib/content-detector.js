@@ -168,6 +168,8 @@ class ContentDetector {
   extractParagraphs(contentArea) {
     // Debug: Log all child elements of contentArea
     console.log('[ContentDetector] Content area tag:', contentArea.tagName);
+    console.log('[ContentDetector] Content area class:', contentArea.className);
+    console.log('[ContentDetector] Content area ID:', contentArea.id);
     console.log('[ContentDetector] Direct children count:', contentArea.children.length);
     const childTags = Array.from(contentArea.children).map(c => c.tagName.toLowerCase());
     console.log('[ContentDetector] Child tags:', childTags);
@@ -182,7 +184,7 @@ class ContentDetector {
       {
         acceptNode: (node) => {
           processedCount++;
-          const result = this.shouldProcessNode(node);
+          const result = this.shouldProcessNode(node, contentArea);
           if (result === NodeFilter.FILTER_ACCEPT) {
             acceptedCount++;
           }
@@ -226,20 +228,32 @@ class ContentDetector {
   /**
    * Check if node should be processed
    * @param {Node} node - The node to check
+   * @param {Element} contentArea - The content container (to stop closest() traversal)
    * @returns {number} - NodeFilter result
    */
-  shouldProcessNode(node) {
+  shouldProcessNode(node, contentArea) {
     const tagName = node.tagName ? node.tagName.toLowerCase() : '';
 
-    // Check if element or parent matches exclude selectors
+    // Check if element itself matches exclude selectors
     for (const selector of this.excludeSelectors) {
       if (node.matches && node.matches(selector)) {
         console.log(`[ContentDetector] REJECTED ${tagName} - matches exclude selector: ${selector}`);
         return NodeFilter.FILTER_REJECT;
       }
-      if (node.closest && node.closest(selector)) {
-        console.log(`[ContentDetector] REJECTED ${tagName} - parent matches exclude selector: ${selector}`);
-        return NodeFilter.FILTER_REJECT;
+    }
+
+    // Check if parent matches exclude selectors, but stop at contentArea
+    // This prevents contentArea's own classes from excluding its children
+    if (node !== contentArea) {
+      let current = node.parentElement;
+      while (current && current !== contentArea) {
+        for (const selector of this.excludeSelectors) {
+          if (current.matches && current.matches(selector)) {
+            console.log(`[ContentDetector] REJECTED ${tagName} - parent ${current.tagName} matches exclude selector: ${selector}`);
+            return NodeFilter.FILTER_REJECT;
+          }
+        }
+        current = current.parentElement;
       }
     }
 
