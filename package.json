@@ -1,0 +1,16 @@
+{
+  "name": "chrome-smart-translation-assistant",
+  "version": "0.1.0",
+  "description": "E2E tests for Chrome translation extension",
+  "scripts": {
+    "test:e2e": "node tests/e2e/reddit-translation.test.js",
+    "test:unit": "echo 'Unit tests not implemented yet'",
+    "test:all": "npm run test:e2e"
+  },
+  "devDependencies": {
+    "puppeteer": "^21.0.0"
+  },
+  "keywords": ["chrome-extension", "translation", "testing"],
+  "author": "",
+  "license": "MIT"
+}

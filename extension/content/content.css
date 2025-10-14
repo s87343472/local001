@@ -1,0 +1,107 @@
+/**
+ * Content Script Styles
+ * Styles for translation display and UI elements
+ */
+
+/* Translation paragraph styles */
+.csta-translation {
+  color: #1c1c1c;
+  font-style: normal;
+  font-weight: 400;
+  margin: 2px 0 8px 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  line-height: 1.4;
+  font-size: 1em;
+  opacity: 0.85;
+  transition: opacity 0.2s ease;
+  animation: csta-fade-in 0.3s ease;
+}
+
+.csta-translation:hover {
+  opacity: 1;
+}
+
+/* Fade in animation for new translations */
+@keyframes csta-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mock translation warning */
+.csta-translation.csta-mock {
+  opacity: 0.5;
+  font-style: italic;
+}
+
+/* Mark translated elements */
+[data-translated="true"] {
+  position: relative;
+}
+
+/* Hidden translations */
+.csta-translation[style*="display: none"] {
+  display: none !important;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .csta-translation {
+    font-size: 0.9em;
+    padding: 6px 10px;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .csta-translation {
+    color: #d0d0d0;
+    opacity: 0.75;
+  }
+
+  .csta-translation:hover {
+    opacity: 0.9;
+  }
+
+  .csta-translation.csta-mock {
+    background: #3d3520;
+    border-left-color: #d4933c;
+  }
+
+  [data-translated="true"]:hover {
+    background-color: rgba(90, 159, 226, 0.05);
+  }
+}
+
+/* Print styles - hide translations in print */
+@media print {
+  .csta-translation {
+    display: none !important;
+  }
+}
+
+/* Loading indicator */
+.csta-loading {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #4A90E2;
+  border-radius: 50%;
+  animation: csta-spin 1s linear infinite;
+}
+
+@keyframes csta-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Floating button styles (placeholder for Issue #5) */
+/* TODO: Implement floating button styles in Issue #5 */

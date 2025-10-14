@@ -1,0 +1,353 @@
+class FloatingButton {
+  constructor() {
+    this.container = null;
+    this.button = null;
+    this.panel = null;
+    this.state = 'idle';
+    this.progress = 0;
+    this.stats = null;
+  }
+
+  inject() {
+    if (this.container) return;
+
+    this.container = document.createElement('div');
+    this.container.id = 'csta-floating-container';
+
+    this.button = this.createButton();
+    this.panel = this.createPanel();
+
+    this.container.appendChild(this.button);
+    this.container.appendChild(this.panel);
+
+    document.body.appendChild(this.container);
+
+    this.attachEventListeners();
+
+    console.log('Floating button injected');
+  }
+
+  createButton() {
+    const button = document.createElement('button');
+    button.id = 'csta-floating-button';
+    button.className = 'csta-btn csta-btn-idle';
+    button.setAttribute('aria-label', '智能翻译');
+    button.setAttribute('title', '点击翻译页面');
+
+    button.innerHTML = `
+      <svg class="csta-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
+        <path d="M12 8v8m-4-4h8"/>
+      </svg>
+      <div class="csta-btn-progress-ring">
+        <svg viewBox="0 0 36 36">
+          <path class="csta-progress-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+          <path class="csta-progress-bar" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+        </svg>
+      </div>
+      <span class="csta-btn-progress-text"></span>
+    `;
+
+    return button;
+  }
+
+  createPanel() {
+    const panel = document.createElement('div');
+    panel.id = 'csta-floating-panel';
+    panel.className = 'csta-panel csta-panel-hidden';
+
+    panel.innerHTML = `
+      <div class="csta-panel-header">
+        <h3>🌐 智能翻译</h3>
+        <button class="csta-panel-close" aria-label="关闭面板">×</button>
+      </div>
+
+      <div class="csta-panel-body">
+        <div class="csta-status-section">
+          <div class="csta-status-label">状态:</div>
+          <div class="csta-status-value">
+            <span class="csta-status-icon">⚪</span>
+            <span class="csta-status-text">就绪</span>
+          </div>
+        </div>
+
+        <div class="csta-controls-section">
+          <button class="csta-control-btn csta-btn-translate">
+            <span class="csta-btn-icon">🌐</span>
+            翻译页面
+          </button>
+          <button class="csta-control-btn csta-btn-toggle" disabled>
+            <span class="csta-btn-icon">⇄</span>
+            切换显示
+          </button>
+          <button class="csta-control-btn csta-btn-retranslate" disabled>
+            <span class="csta-btn-icon">🔄</span>
+            重新翻译
+          </button>
+        </div>
+
+        <div class="csta-info-section">
+          <div class="csta-info-item">
+            <span class="csta-info-label">引擎:</span>
+            <span class="csta-info-value csta-engine">-</span>
+          </div>
+          <div class="csta-info-item">
+            <span class="csta-info-label">语言:</span>
+            <span class="csta-info-value csta-language">-</span>
+          </div>
+          <div class="csta-info-item">
+            <span class="csta-info-label">已翻译:</span>
+            <span class="csta-info-value csta-count">0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="csta-panel-footer">
+        <button class="csta-footer-btn csta-btn-settings">
+          <span>⚙️</span> 设置
+        </button>
+        <button class="csta-footer-btn csta-btn-stats">
+          <span>📊</span> 统计
+        </button>
+      </div>
+    `;
+
+    return panel;
+  }
+
+  attachEventListeners() {
+    this.button.addEventListener('click', () => this.handleButtonClick());
+
+    const closeBtn = this.panel.querySelector('.csta-panel-close');
+    closeBtn.addEventListener('click', () => this.closePanel());
+
+    const translateBtn = this.panel.querySelector('.csta-btn-translate');
+    translateBtn.addEventListener('click', () => this.translate());
+
+    const toggleBtn = this.panel.querySelector('.csta-btn-toggle');
+    toggleBtn.addEventListener('click', () => this.toggleTranslations());
+
+    const retranslateBtn = this.panel.querySelector('.csta-btn-retranslate');
+    retranslateBtn.addEventListener('click', () => this.retranslate());
+
+    const settingsBtn = this.panel.querySelector('.csta-btn-settings');
+    settingsBtn.addEventListener('click', () => this.openSettings());
+
+    const statsBtn = this.panel.querySelector('.csta-btn-stats');
+    statsBtn.addEventListener('click', () => this.openStats());
+
+    document.addEventListener('click', (e) => this.handleOutsideClick(e));
+  }
+
+  handleButtonClick() {
+    if (this.state === 'idle') {
+      this.translate();
+    } else if (this.state === 'translated') {
+      this.togglePanel();
+    } else if (this.state === 'translating') {
+      this.togglePanel();
+    } else if (this.state === 'error') {
+      this.retranslate();
+    }
+  }
+
+  togglePanel() {
+    const isHidden = this.panel.classList.contains('csta-panel-hidden');
+
+    if (isHidden) {
+      this.panel.classList.remove('csta-panel-hidden');
+      this.updatePanelContent();
+    } else {
+      this.closePanel();
+    }
+  }
+
+  closePanel() {
+    this.panel.classList.add('csta-panel-hidden');
+  }
+
+  handleOutsideClick(event) {
+    if (!this.container.contains(event.target)) {
+      this.closePanel();
+    }
+  }
+
+  async translate() {
+    this.setState('translating');
+    this.closePanel();
+
+    try {
+      // Call translatePage() function from content.js directly
+      // Content scripts share global scope
+      if (typeof window.translatePage === 'function') {
+        await window.translatePage();
+        this.setState('translated');
+        await this.updateStats();
+      } else {
+        throw new Error('translatePage function not found');
+      }
+    } catch (error) {
+      this.setState('error');
+      console.error('Translation request failed:', error);
+    }
+  }
+
+  async toggleTranslations() {
+    try {
+      // Call toggleTranslations() function from content.js directly
+      if (typeof window.toggleTranslations === 'function') {
+        window.toggleTranslations();
+        await this.updateStats();
+        this.updatePanelContent();
+      } else {
+        throw new Error('toggleTranslations function not found');
+      }
+    } catch (error) {
+      console.error('Toggle failed:', error);
+    }
+  }
+
+  async retranslate() {
+    await chrome.runtime.sendMessage({ action: 'CLEAR_TRANSLATIONS' });
+    this.translate();
+  }
+
+  async updateStats() {
+    try {
+      // Call getTranslationStats() function from content.js directly
+      if (typeof window.getTranslationStats === 'function') {
+        this.stats = window.getTranslationStats();
+        this.updatePanelContent();
+      }
+    } catch (error) {
+      console.error('Failed to get stats:', error);
+    }
+  }
+
+  updatePanelContent() {
+    if (!this.stats) return;
+
+    const countEl = this.panel.querySelector('.csta-count');
+    countEl.textContent = this.stats.total || 0;
+
+    const statusText = this.panel.querySelector('.csta-status-text');
+    const statusIcon = this.panel.querySelector('.csta-status-icon');
+
+    if (this.state === 'translated') {
+      statusText.textContent = `已翻译 (${this.stats.visible} 可见)`;
+      statusIcon.textContent = '✓';
+    }
+
+    const toggleBtn = this.panel.querySelector('.csta-btn-toggle');
+    const retranslateBtn = this.panel.querySelector('.csta-btn-retranslate');
+
+    if (this.state === 'translated') {
+      toggleBtn.disabled = false;
+      retranslateBtn.disabled = false;
+    } else {
+      toggleBtn.disabled = true;
+      retranslateBtn.disabled = true;
+    }
+  }
+
+  setState(newState) {
+    this.state = newState;
+
+    this.button.className = `csta-btn csta-btn-${newState}`;
+
+    const statusText = this.panel.querySelector('.csta-status-text');
+    const statusIcon = this.panel.querySelector('.csta-status-icon');
+    const translateBtn = this.panel.querySelector('.csta-btn-translate');
+
+    switch (newState) {
+      case 'idle':
+        this.button.setAttribute('title', '点击翻译页面');
+        statusText.textContent = '就绪';
+        statusIcon.textContent = '⚪';
+        translateBtn.disabled = false;
+        this.setProgress(0);
+        break;
+
+      case 'translating':
+        this.button.setAttribute('title', '翻译中...');
+        statusText.textContent = '翻译中...';
+        statusIcon.textContent = '⏳';
+        translateBtn.disabled = true;
+        this.simulateProgress();
+        break;
+
+      case 'translated':
+        this.button.setAttribute('title', '翻译完成(点击切换)');
+        statusText.textContent = '已翻译';
+        statusIcon.textContent = '✓';
+        translateBtn.disabled = true;
+        this.setProgress(100);
+        break;
+
+      case 'error':
+        this.button.setAttribute('title', '翻译失败(点击重试)');
+        statusText.textContent = '发生错误';
+        statusIcon.textContent = '⚠️';
+        translateBtn.disabled = false;
+        this.setProgress(0);
+        break;
+    }
+  }
+
+  setProgress(percent) {
+    this.progress = percent;
+
+    const progressBar = this.button.querySelector('.csta-progress-bar');
+    const progressText = this.button.querySelector('.csta-btn-progress-text');
+
+    const circumference = 2 * Math.PI * 15.9155;
+    const offset = circumference - (percent / 100) * circumference;
+
+    progressBar.style.strokeDasharray = `${circumference} ${circumference}`;
+    progressBar.style.strokeDashoffset = offset;
+
+    if (percent > 0 && percent < 100) {
+      progressText.textContent = `${Math.round(percent)}%`;
+      progressText.style.display = 'block';
+    } else {
+      progressText.style.display = 'none';
+    }
+  }
+
+  simulateProgress() {
+    let progress = 0;
+
+    const interval = setInterval(() => {
+      progress += Math.random() * 15;
+
+      if (progress >= 95) {
+        progress = 95;
+        clearInterval(interval);
+      }
+
+      this.setProgress(progress);
+    }, 500);
+  }
+
+  openSettings() {
+    chrome.runtime.sendMessage({
+      action: 'OPEN_OPTIONS'
+    });
+  }
+
+  openStats() {
+    chrome.runtime.sendMessage({
+      action: 'OPEN_OPTIONS',
+      data: { tab: 'stats' }
+    });
+  }
+
+  remove() {
+    if (this.container) {
+      this.container.remove();
+      this.container = null;
+      this.button = null;
+      this.panel = null;
+    }
+  }
+}

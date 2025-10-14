@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings - Chrome Smart Translation Assistant</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="container">
+    <aside class="sidebar">
+      <div class="logo">
+        <h1>🌐 Translation Settings</h1>
+      </div>
+      <nav class="nav">
+        <button class="nav-item active" data-tab="api">
+          <span class="nav-icon">🔑</span>
+          <span class="nav-label">API Configuration</span>
+        </button>
+        <button class="nav-item" data-tab="preferences">
+          <span class="nav-icon">⚙️</span>
+          <span class="nav-label">Translation Preferences</span>
+        </button>
+        <button class="nav-item" data-tab="display">
+          <span class="nav-icon">🎨</span>
+          <span class="nav-label">Display Settings</span>
+        </button>
+        <button class="nav-item" data-tab="blacklist">
+          <span class="nav-icon">🚫</span>
+          <span class="nav-label">Blacklist</span>
+        </button>
+        <button class="nav-item" data-tab="stats">
+          <span class="nav-icon">📊</span>
+          <span class="nav-label">Statistics</span>
+        </button>
+        <button class="nav-item" data-tab="about">
+          <span class="nav-icon">ℹ️</span>
+          <span class="nav-label">About</span>
+        </button>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <div class="tab-content active" id="tab-api">
+        <h2>API Configuration</h2>
+        <p class="description">Configure your translation API keys. Get your free API key from <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a>.</p>
+
+        <div class="form-section">
+          <label class="form-label">
+            Gemini API Key
+            <span class="label-badge">Required</span>
+          </label>
+          <div class="input-group">
+            <input type="password" id="gemini-api-key" class="form-input" placeholder="Enter your Gemini API key">
+            <button id="toggle-gemini-key" class="btn-icon" type="button" title="Show/Hide">👁️</button>
+            <button id="validate-gemini-key" class="btn-secondary" type="button">Validate</button>
+          </div>
+          <div id="gemini-key-status" class="status-message"></div>
+          <p class="help-text">Your API key is encrypted and stored locally. <a href="https://aistudio.google.com/app/apikey" target="_blank">Get API Key →</a></p>
+        </div>
+
+        <div class="form-section">
+          <label class="form-label">
+            Google Translate API Key
+            <span class="label-badge optional">Optional</span>
+          </label>
+          <div class="input-group">
+            <input type="password" id="google-api-key" class="form-input" placeholder="Enter Google Translate API key (optional)">
+            <button id="toggle-google-key" class="btn-icon" type="button" title="Show/Hide">👁️</button>
+          </div>
+          <p class="help-text">Used as fallback when Gemini is unavailable.</p>
+        </div>
+      </div>
+
+      <div class="tab-content" id="tab-preferences">
+        <h2>Translation Preferences</h2>
+        <p class="description">Customize how translations are performed.</p>
+
+        <div class="form-section">
+          <label class="form-label">Target Language</label>
+          <select id="target-language" class="form-select">
+            <option value="zh-CN">简体中文 (Simplified Chinese)</option>
+            <option value="zh-TW">繁體中文 (Traditional Chinese)</option>
+            <option value="ja">日本語 (Japanese)</option>
+            <option value="ko">한국어 (Korean)</option>
+            <option value="en">English</option>
+            <option value="es">Español (Spanish)</option>
+            <option value="fr">Français (French)</option>
+            <option value="de">Deutsch (German)</option>
+            <option value="ru">Русский (Russian)</option>
+          </select>
+        </div>
+
+        <div class="form-section">
+          <label class="form-label">Default Translation Engine</label>
+          <div class="radio-group">
+            <label class="radio-label">
+              <input type="radio" name="engine" value="gemini" checked>
+              <span class="radio-custom"></span>
+              <span class="radio-text">
+                <strong>Gemini</strong>
+                <span class="radio-desc">High quality, context-aware translation</span>
+              </span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="engine" value="google">
+              <span class="radio-custom"></span>
+              <span class="radio-text">
+                <strong>Google Translate</strong>
+                <span class="radio-desc">Fast, reliable translation</span>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <label class="form-label">Professional Domain</label>
+          <select id="domain" class="form-select">
+            <option value="computer">Computer Science & Programming</option>
+            <option value="general">General Content</option>
+            <option value="business">Business & Finance</option>
+            <option value="science">Science & Technology</option>
+            <option value="medical">Medical & Healthcare</option>
+          </select>
+          <p class="help-text">Optimizes translation for domain-specific terminology.</p>
+        </div>
+
+        <div class="form-section">
+          <label class="form-label">Translation Mode</label>
+          <div class="radio-group">
+            <label class="radio-label">
+              <input type="radio" name="mode" value="fast">
+              <span class="radio-custom"></span>
+              <span class="radio-text">
+                <strong>Fast</strong>
+                <span class="radio-desc">Quick translation with minimal context</span>
+              </span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="mode" value="smart" checked>
+              <span class="radio-custom"></span>
+              <span class="radio-text">
+                <strong>Smart</strong>
+                <span class="radio-desc">Balanced speed and accuracy</span>
+              </span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="mode" value="precise">
+              <span class="radio-custom"></span>
+              <span class="radio-text">
+                <strong>Precise</strong>
+                <span class="radio-desc">Maximum accuracy, slower processing</span>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <label class="toggle-label">
+            <input type="checkbox" id="auto-translate">
+            <span class="toggle-slider"></span>
+            <span class="toggle-text">
+              <strong>Auto-translate pages</strong>
+              <span class="toggle-desc">Automatically translate pages when loaded</span>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <div class="tab-content" id="tab-display">
+        <h2>Display Settings</h2>
+        <p class="description">Customize the appearance of translations.</p>
+
+        <div class="form-section">
+          <label class="form-label">Translation Color</label>
+          <div class="input-group">
+            <input type="color" id="translation-color" class="form-color" value="#666666">
+            <input type="text" id="translation-color-hex" class="form-input" value="#666666" pattern="^#[0-9A-Fa-f]{6}$">
+          </div>
+        </div>
+
+        <div class="form-section">
+          <label class="form-label">Font Style</label>
+          <select id="font-style" class="form-select">
+            <option value="normal">Normal</option>
+            <option value="italic" selected>Italic</option>
+          </select>
+        </div>
+
+        <div class="form-section">
+          <label class="form-label">Font Size: <span id="font-size-value">95%</span></label>
+          <input type="range" id="font-size" class="form-range" min="80" max="120" value="95" step="5">
+          <div class="range-labels">
+            <span>80%</span>
+            <span>100%</span>
+            <span>120%</span>
+          </div>
+        </div>
+
+        <div class="preview-section">
+          <h3>Live Preview</h3>
+          <div class="preview-content">
+            <p class="preview-original">This is the original text in English.</p>
+            <p class="preview-translation" id="preview-translation">这是翻译后的文本示例。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="tab-blacklist">
+        <h2>Blacklist Management</h2>
+        <p class="description">Prevent translation on specific websites.</p>
+
+        <div class="form-section">
+          <label class="form-label">Add Domain to Blacklist</label>
+          <div class="input-group">
+            <input type="text" id="blacklist-input" class="form-input" placeholder="example.com">
+            <button id="add-blacklist" class="btn-secondary">Add</button>
+          </div>
+          <p class="help-text">Enter domain without protocol (e.g., github.com, not https://github.com)</p>
+        </div>
+
+        <div class="form-section">
+          <label class="toggle-label">
+            <input type="checkbox" id="blacklist-preset">
+            <span class="toggle-slider"></span>
+            <span class="toggle-text">
+              <strong>Include banking/payment sites</strong>
+              <span class="toggle-desc">Automatically disable on financial websites for security</span>
+            </span>
+          </label>
+        </div>
+
+        <div class="form-section">
+          <label class="form-label">Current Blacklist</label>
+          <div id="blacklist-container" class="chip-container">
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="button-group">
+            <button id="export-blacklist" class="btn-secondary">📥 Export</button>
+            <button id="import-blacklist" class="btn-secondary">📤 Import</button>
+            <input type="file" id="import-file" accept=".json" style="display: none;">
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="tab-stats">
+        <h2>Usage Statistics</h2>
+        <p class="description">Track your translation usage and performance.</p>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">📝</div>
+            <div class="stat-content">
+              <div class="stat-value" id="stat-total-chars">0</div>
+              <div class="stat-label">Total Characters Translated</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon">🔢</div>
+            <div class="stat-content">
+              <div class="stat-value" id="stat-total-requests">0</div>
+              <div class="stat-label">Total Requests</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon">📅</div>
+            <div class="stat-content">
+              <div class="stat-value" id="stat-month-chars">0</div>
+              <div class="stat-label">This Month</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon">💾</div>
+            <div class="stat-content">
+              <div class="stat-value" id="stat-cache-hit">0%</div>
+              <div class="stat-label">Cache Hit Rate</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <button id="clear-stats" class="btn-danger">Clear Statistics</button>
+        </div>
+      </div>
+
+      <div class="tab-content" id="tab-about">
+        <h2>About</h2>
+        <div class="about-content">
+          <div class="about-logo">🌐</div>
+          <h3>Chrome Smart Translation Assistant</h3>
+          <p class="version">Version 0.1.0</p>
+
+          <div class="about-section">
+            <h4>Features</h4>
+            <ul>
+              <li>✓ Professional bilingual parallel display</li>
+              <li>✓ Gemini-powered accurate translations</li>
+              <li>✓ Domain-specific terminology support</li>
+              <li>✓ Progressive rendering for large pages</li>
+              <li>✓ Privacy-focused local storage</li>
+              <li>✓ Dynamic content detection</li>
+            </ul>
+          </div>
+
+          <div class="about-section">
+            <h4>Links</h4>
+            <p><a href="https://github.com/s87343472/local001" target="_blank">📦 GitHub Repository</a></p>
+            <p><a href="https://github.com/s87343472/local001/issues" target="_blank">🐛 Report Issues</a></p>
+            <p><a href="https://aistudio.google.com/app/apikey" target="_blank">🔑 Get API Key</a></p>
+          </div>
+
+          <div class="about-section">
+            <h4>Privacy Policy</h4>
+            <p>This extension stores API keys and preferences locally on your device. Translation requests are sent directly to Google's APIs. No data is collected or shared with third parties.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="save-bar">
+        <button id="save-settings" class="btn-primary">💾 Save Settings</button>
+        <div id="save-status" class="save-status"></div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="options.js"></script>
+</body>
+</html>
