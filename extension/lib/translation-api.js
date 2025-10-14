@@ -121,14 +121,13 @@ export class TranslationAPI {
         },
         body: JSON.stringify({
           contents: [{
-            role: 'user',
             parts: [{
               text: prompt
             }]
           }],
           generationConfig: {
-            temperature: 0.3,
-            maxOutputTokens: 2048
+            temperature: 0.1,
+            maxOutputTokens: 8192
           }
         })
       });
@@ -163,16 +162,15 @@ export class TranslationAPI {
 
     const texts = paragraphs.map(p => p.text);
 
-    return `Translate the following English texts to ${langName}.
+    return `You are a translation assistant. Translate these English texts to ${langName}.
 
-${dictionary ? `Use these technical terms (${domain} domain):\n${dictionary}\n\n` : ''}
-Input (${texts.length} texts):
-${JSON.stringify(texts, null, 2)}
+${dictionary ? `Technical terminology (${domain} domain):\n${dictionary}\n\n` : ''}
+English texts to translate:
+${texts.map((t, i) => `${i + 1}. ${t}`).join('\n')}
 
-Output: Return ONLY a JSON array of translations, one for each input text.
-Example: ["翻译1", "翻译2", "翻译3"]
-
-Do NOT add explanations, labels, or any other text. Only return the JSON array.`;
+Respond with ONLY a JSON array containing ${texts.length} ${langName} translations.
+Format: ["translation1", "translation2", ...]
+Do not include any explanations, labels, or markdown formatting.`;
   }
 
   /**
