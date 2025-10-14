@@ -64,9 +64,17 @@ class ContentDetector {
     // Strategy 1: HTML5 semantic tags
     for (const selector of this.semanticSelectors) {
       const element = document.querySelector(selector);
-      if (element && this.hasSignificantContent(element)) {
-        console.log('Content detected via semantic tag:', selector);
-        return element;
+      if (element) {
+        const textLength = element.textContent.trim().length;
+        console.log(`[ContentDetector] Checking selector "${selector}":`, {
+          found: true,
+          textLength: textLength,
+          hasSignificantContent: textLength > 100
+        });
+        if (this.hasSignificantContent(element)) {
+          console.log('Content detected via semantic tag:', selector);
+          return element;
+        }
       }
     }
 
@@ -178,6 +186,8 @@ class ContentDetector {
     );
 
     let currentNode;
+    let extractedCount = 0;
+    let tooShortCount = 0;
     while ((currentNode = walker.nextNode())) {
       const text = this.getNodeText(currentNode);
 
@@ -187,8 +197,19 @@ class ContentDetector {
           text: text,
           hash: this.hashText(text)
         });
+        extractedCount++;
+      } else if (text) {
+        tooShortCount++;
       }
     }
+
+    console.log(`[ContentDetector] TreeWalker results:`, {
+      processedCount,
+      acceptedCount,
+      extractedCount,
+      tooShortCount,
+      finalParagraphs: paragraphs.length
+    });
 
     console.log(`[ContentDetector] Processed ${processedCount} nodes, accepted ${acceptedCount}, extracted ${paragraphs.length} paragraphs`);
 
