@@ -151,8 +151,21 @@ async function runTests() {
   let page;
 
   try {
+    // Step 0: Verify extension path exists
+    const fs = require('fs');
+    if (!fs.existsSync(CONFIG.extensionPath)) {
+      throw new Error(`Extension path does not exist: ${CONFIG.extensionPath}`);
+    }
+    const manifestPath = path.join(CONFIG.extensionPath, 'manifest.json');
+    if (!fs.existsSync(manifestPath)) {
+      throw new Error(`manifest.json not found in: ${CONFIG.extensionPath}`);
+    }
+    console.log('✓ Extension path verified\n');
+
     // Step 1: Launch browser with extension
     console.log('📦 Launching Chrome with extension...');
+    console.log(`   Extension path: ${CONFIG.extensionPath}`);
+
     browser = await puppeteer.launch({
       headless: false, // Must be false for extensions
       executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', // Use system Chrome
@@ -163,29 +176,36 @@ async function runTests() {
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
         '--disable-gpu',
-        '--disable-blink-features=AutomationControlled'
+        '--disable-blink-features=AutomationControlled',
+        '--enable-logging',
+        '--v=1'
       ],
-      dumpio: false, // Suppress browser logs
+      dumpio: true, // Enable browser logs to see extension loading
       protocolTimeout: 120000 // Increase protocol timeout to 120s
     });
 
-    // Wait for browser to be ready
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    // Wait for browser and extension to be ready
+    await new Promise(resolve => setTimeout(resolve, 5000));
 
     page = await browser.newPage();
     await page.setViewport({ width: 1920, height: 1080 });
 
     console.log('✓ Browser launched\n');
 
-    // Step 1.5: Open extension popup to trigger initialization
-    console.log('⚙️  Initializing extension...');
+    // Step 1.5: Check if extension loaded
+    console.log('🔍 Checking if extension loaded...');
 
     // Method: Visit any page first to ensure extension context is ready
     await page.goto('https://example.com');
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(3000);
 
     // Try to find and use a service worker target for configuration
     const targets = await browser.targets();
+    console.log(`   Found ${targets.length} targets:`, targets.map(t => ({
+      type: t.type(),
+      url: t.url().substring(0, 60) + (t.url().length > 60 ? '...' : '')
+    })));
+
     const extensionTarget = targets.find(target =>
       target.type() === 'service_worker' &&
       target.url().includes('chrome-extension://')
