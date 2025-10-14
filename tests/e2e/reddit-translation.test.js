@@ -87,9 +87,16 @@ async function runTests() {
         `--disable-extensions-except=${CONFIG.extensionPath}`,
         `--load-extension=${CONFIG.extensionPath}`,
         '--no-sandbox',
-        '--disable-setuid-sandbox'
-      ]
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu'
+      ],
+      dumpio: false, // Suppress browser logs
+      protocolTimeout: 60000 // Increase protocol timeout
     });
+
+    // Wait for browser to be ready
+    await new Promise(resolve => setTimeout(resolve, 2000));
 
     page = await browser.newPage();
     await page.setViewport({ width: 1920, height: 1080 });
