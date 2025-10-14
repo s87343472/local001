@@ -39,28 +39,67 @@ const results = {
  */
 async function getExtensionId(page) {
   try {
-    // Navigate to extensions page
+    // Method 1: Try chrome://extensions/ page
     await page.goto('chrome://extensions/');
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(2000);
 
-    // Get extension ID from the page
-    const extensionId = await page.evaluate(() => {
-      const extensions = document.querySelector('extensions-manager')
-        ?.shadowRoot?.querySelector('extensions-item-list')
-        ?.shadowRoot?.querySelectorAll('extensions-item');
+    let extensionId = await page.evaluate(() => {
+      try {
+        const manager = document.querySelector('extensions-manager');
+        if (!manager || !manager.shadowRoot) return null;
 
-      if (extensions) {
-        for (const ext of extensions) {
-          const name = ext.shadowRoot?.querySelector('#name')?.textContent;
-          if (name?.includes('Translation') || name?.includes('Smart')) {
-            return ext.id;
+        const itemList = manager.shadowRoot.querySelector('extensions-item-list');
+        if (!itemList || !itemList.shadowRoot) return null;
+
+        const items = itemList.shadowRoot.querySelectorAll('extensions-item');
+
+        for (const item of items) {
+          if (!item.shadowRoot) continue;
+
+          const nameEl = item.shadowRoot.querySelector('#name');
+          const name = nameEl?.textContent || '';
+
+          // Match our extension name
+          if (name.includes('Translation') || name.includes('Smart')) {
+            // Extension ID is in the item's id attribute
+            return item.id;
           }
         }
+      } catch (e) {
+        console.error('Shadow DOM query error:', e);
       }
       return null;
     });
 
-    return extensionId;
+    if (extensionId) {
+      return extensionId;
+    }
+
+    // Method 2: Extract from extension path (fallback)
+    console.log('Trying fallback method: scanning filesystem...');
+    const { execSync } = require('child_process');
+
+    try {
+      // Chrome stores extension IDs based on path hash
+      // For unpacked extensions loaded via --load-extension, ID is deterministic
+      const extPath = CONFIG.extensionPath;
+
+      // Generate extension ID (Chrome uses first 32 chars of SHA256 of path, converted to a-p)
+      const crypto = require('crypto');
+      const hash = crypto.createHash('sha256').update(extPath).digest('hex');
+
+      // Chrome converts hex to letters a-p (representing 0-f)
+      extensionId = hash.substring(0, 32).split('').map(c => {
+        const code = parseInt(c, 16);
+        return String.fromCharCode(97 + code); // 'a' = 97
+      }).join('');
+
+      return extensionId;
+    } catch (e) {
+      console.error('Fallback method failed:', e.message);
+    }
+
+    return null;
   } catch (error) {
     console.error('Error getting extension ID:', error.message);
     return null;
@@ -138,26 +177,36 @@ async function runTests() {
 
     console.log('✓ Browser launched\n');
 
-    // Step 1.5: Configure extension API key via chrome.storage
-    console.log('⚙️  Configuring extension API key...');
+    // Step 1.5: Open extension popup to trigger initialization
+    console.log('⚙️  Initializing extension...');
 
-    // Get Gemini API key from environment variable
-    const geminiApiKey = process.env.GEMINI_API_KEY || 'test-api-key-for-e2e';
+    // Method: Visit any page first to ensure extension context is ready
+    await page.goto('https://example.com');
+    await page.waitForTimeout(2000);
 
-    // Navigate to extension page to access chrome.storage API
-    const extensionId = await getExtensionId(page);
-    console.log(`Extension ID: ${extensionId}`);
+    // Try to find and use a service worker target for configuration
+    const targets = await browser.targets();
+    const extensionTarget = targets.find(target =>
+      target.type() === 'service_worker' &&
+      target.url().includes('chrome-extension://')
+    );
 
-    if (extensionId) {
+    if (extensionTarget) {
+      const extensionId = new URL(extensionTarget.url()).hostname;
+      console.log(`Extension ID found: ${extensionId}`);
+
+      // Navigate to options page and configure
       await page.goto(`chrome-extension://${extensionId}/options/options.html`);
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(2000);
 
-      // Set API key and preferences in storage
+      // Set API key via page evaluation
+      const geminiApiKey = process.env.GEMINI_API_KEY || 'test-api-key-for-e2e';
+
       await page.evaluate((apiKey) => {
         return new Promise((resolve) => {
           chrome.storage.sync.set({
             apiKeys: {
-              gemini: btoa(apiKey) // Base64 encode like the extension does
+              gemini: btoa(apiKey)
             },
             preferences: {
               targetLanguage: 'zh-CN',
@@ -173,9 +222,10 @@ async function runTests() {
         });
       }, geminiApiKey);
 
-      console.log('✓ API key configured\n');
+      console.log('✓ Extension configured\n');
     } else {
-      console.warn('⚠️  Could not find extension ID, skipping API key setup');
+      console.warn('⚠️  Extension service worker not found');
+      console.log('Available targets:', targets.map(t => ({type: t.type(), url: t.url()})));
     }
 
     // Step 2: Navigate to Reddit
