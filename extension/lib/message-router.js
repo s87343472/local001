@@ -79,24 +79,21 @@ class MessageRouter {
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
         const response = await new Promise((resolve, reject) => {
-          // Wake up service worker first
-          chrome.runtime.getPlatformInfo(() => {
-            chrome.runtime.sendMessage(
-              {
-                action,
-                data,
-                requestId: this.generateRequestId(),
-                timestamp: Date.now()
-              },
-              (response) => {
-                if (chrome.runtime.lastError) {
-                  reject(new Error(chrome.runtime.lastError.message));
-                } else {
-                  resolve(response);
-                }
+          chrome.runtime.sendMessage(
+            {
+              action,
+              data,
+              requestId: this.generateRequestId(),
+              timestamp: Date.now()
+            },
+            (response) => {
+              if (chrome.runtime.lastError) {
+                reject(new Error(chrome.runtime.lastError.message));
+              } else {
+                resolve(response);
               }
-            );
-          });
+            }
+          );
         });
 
         return response;
