@@ -41,6 +41,34 @@ chrome.runtime.onStartup.addListener(() => {
   console.log('Service worker started');
 });
 
+// Keep-alive mechanism for Service Worker
+let keepAliveInterval;
+
+function startKeepAlive() {
+  keepAliveInterval = setInterval(() => {
+    chrome.runtime.getPlatformInfo(() => {
+      // Just ping to keep service worker active
+    });
+  }, 20000); // Ping every 20 seconds
+}
+
+function stopKeepAlive() {
+  if (keepAliveInterval) {
+    clearInterval(keepAliveInterval);
+  }
+}
+
+// Start keep-alive when first message arrives
+let keepAliveStarted = false;
+
+// Monitor connections to keep service worker alive
+chrome.runtime.onConnect.addListener((port) => {
+  if (!keepAliveStarted) {
+    startKeepAlive();
+    keepAliveStarted = true;
+  }
+});
+
 // Message handling
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // Handle async responses

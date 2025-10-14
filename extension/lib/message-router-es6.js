@@ -69,29 +69,51 @@ class MessageRouter {
   }
 
   /**
-   * Send a message to the background script
+   * Send a message to the background script with retry
    * @param {string} action - The action type
    * @param {Object} data - The message data
+   * @param {number} retries - Number of retries (default: 2)
    * @returns {Promise<any>} - The response
    */
-  static async sendToBackground(action, data) {
-    return new Promise((resolve, reject) => {
-      chrome.runtime.sendMessage(
-        {
-          action,
-          data,
-          requestId: this.generateRequestId(),
-          timestamp: Date.now()
-        },
-        (response) => {
-          if (chrome.runtime.lastError) {
-            reject(new Error(chrome.runtime.lastError.message));
-          } else {
-            resolve(response);
-          }
+  static async sendToBackground(action, data, retries = 2) {
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        const response = await new Promise((resolve, reject) => {
+          // Wake up service worker first
+          chrome.runtime.getPlatformInfo(() => {
+            chrome.runtime.sendMessage(
+              {
+                action,
+                data,
+                requestId: this.generateRequestId(),
+                timestamp: Date.now()
+              },
+              (response) => {
+                if (chrome.runtime.lastError) {
+                  reject(new Error(chrome.runtime.lastError.message));
+                } else {
+                  resolve(response);
+                }
+              }
+            );
+          });
+        });
+
+        return response;
+      } catch (error) {
+        const isContextError = error.message.includes('Extension context invalidated');
+        const isLastAttempt = attempt === retries;
+
+        if (isContextError && !isLastAttempt) {
+          console.warn(`Service worker not responding, retry ${attempt + 1}/${retries}...`);
+          // Wait before retry (exponential backoff)
+          await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 100));
+          continue;
         }
-      );
-    });
+
+        throw error;
+      }
+    }
   }
 
   /**
