@@ -171,21 +171,31 @@ async function runTests() {
     const userDataDir = path.join(os.tmpdir(), `chrome-test-${Date.now()}`);
     console.log(`   User data dir: ${userDataDir}`);
 
+    // According to Puppeteer docs: https://pptr.dev/guides/chrome-extensions
+    // Modern way to load extensions (Puppeteer 19.0+)
     browser = await puppeteer.launch({
       headless: false, // Must be false for extensions
-      executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', // Use system Chrome
-      userDataDir: userDataDir, // Use dedicated profile
+      pipe: true, // Required for extension loading per docs
+      executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
       args: [
         `--disable-extensions-except=${CONFIG.extensionPath}`,
         `--load-extension=${CONFIG.extensionPath}`,
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-        '--disable-blink-features=AutomationControlled'
-      ],
-      dumpio: false, // Disable verbose logs
-      protocolTimeout: 120000 // Increase protocol timeout to 120s
+        '--no-sandbox'
+      ]
+    }).catch(async (error) => {
+      console.log('   Pipe mode failed, trying without pipe...');
+      // Fallback: Try without pipe mode
+      return await puppeteer.launch({
+        headless: false,
+        executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+        userDataDir: userDataDir,
+        args: [
+          `--disable-extensions-except=${CONFIG.extensionPath}`,
+          `--load-extension=${CONFIG.extensionPath}`,
+          '--no-sandbox',
+          '--disable-setuid-sandbox'
+        ]
+      });
     });
 
     // Wait for browser and extension to be ready
