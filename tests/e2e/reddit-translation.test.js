@@ -20,9 +20,9 @@ const CONFIG = {
   extensionPath: path.resolve(__dirname, '../../extension'),
   testUrl: 'https://www.reddit.com',
   timeouts: {
-    pageLoad: 30000,
-    translation: 60000,
-    buttonAppear: 10000
+    pageLoad: 60000,  // Increased to 60s for slow networks
+    translation: 90000,  // Increased to 90s
+    buttonAppear: 15000  // Increased to 15s
   }
 };
 
@@ -107,10 +107,23 @@ async function runTests() {
 
     // Step 2: Navigate to Reddit
     console.log('🌐 Navigating to Reddit homepage...');
-    await page.goto(CONFIG.testUrl, {
-      waitUntil: 'networkidle2',
-      timeout: CONFIG.timeouts.pageLoad
-    });
+    try {
+      await page.goto(CONFIG.testUrl, {
+        waitUntil: 'domcontentloaded',  // Less strict than networkidle2
+        timeout: CONFIG.timeouts.pageLoad
+      });
+    } catch (navError) {
+      console.warn('⚠️  Initial navigation timeout, checking if page loaded...');
+      // Check if page actually loaded despite timeout
+      const currentUrl = page.url();
+      if (!currentUrl.includes('reddit')) {
+        throw navError;
+      }
+    }
+
+    // Wait for page to be interactive
+    await page.waitForSelector('body', { timeout: 10000 });
+    await new Promise(resolve => setTimeout(resolve, 2000));
 
     console.log('✓ Page loaded\n');
 
