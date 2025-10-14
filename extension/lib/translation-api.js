@@ -406,7 +406,13 @@ Do not include any explanations, labels, or markdown formatting.`;
     return new Promise((resolve) => {
       chrome.storage.sync.get(['apiKeys'], (data) => {
         const apiKeys = data.apiKeys || {};
-        resolve(apiKeys[engine] || null);
+        const key = apiKeys[engine] || null;
+        console.log(`[TranslationAPI] Getting API key for '${engine}':`, {
+          hasKey: !!key,
+          keyLength: key?.length,
+          keyPrefix: key ? key.substring(0, 10) + '...' : 'none'
+        });
+        resolve(key);
       });
     });
   }
