@@ -83,20 +83,22 @@ async function runTests() {
     console.log('📦 Launching Chrome with extension...');
     browser = await puppeteer.launch({
       headless: false, // Must be false for extensions
+      executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', // Use system Chrome
       args: [
         `--disable-extensions-except=${CONFIG.extensionPath}`,
         `--load-extension=${CONFIG.extensionPath}`,
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
-        '--disable-gpu'
+        '--disable-gpu',
+        '--disable-blink-features=AutomationControlled'
       ],
       dumpio: false, // Suppress browser logs
-      protocolTimeout: 60000 // Increase protocol timeout
+      protocolTimeout: 120000 // Increase protocol timeout to 120s
     });
 
     // Wait for browser to be ready
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 3000));
 
     page = await browser.newPage();
     await page.setViewport({ width: 1920, height: 1080 });
