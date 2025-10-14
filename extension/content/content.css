@@ -5,18 +5,22 @@
 
 /* Translation paragraph styles */
 .csta-translation {
-  color: #666666;
-  font-style: italic;
-  margin-top: 4px;
-  margin-bottom: 8px;
-  padding: 8px 12px;
-  background: #f8f9fa;
-  border-left: 3px solid #4A90E2;
-  border-radius: 4px;
-  line-height: 1.6;
-  font-size: 0.95em;
-  transition: all 0.2s ease;
+  color: #1c1c1c;
+  font-style: normal;
+  font-weight: 400;
+  margin: 2px 0 8px 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  line-height: 1.4;
+  font-size: 1em;
+  opacity: 0.85;
+  transition: opacity 0.2s ease;
   animation: csta-fade-in 0.3s ease;
+}
+
+.csta-translation:hover {
+  opacity: 1;
 }
 
 /* Fade in animation for new translations */
@@ -33,39 +37,13 @@
 
 /* Mock translation warning */
 .csta-translation.csta-mock {
-  background: #fff3cd;
-  border-left-color: #f0ad4e;
-  cursor: help;
-}
-
-/* Engine badge (optional) */
-.csta-translation[data-engine="gemini"]::after {
-  content: "Gemini";
-  position: absolute;
-  right: 8px;
-  top: 8px;
-  font-size: 0.7em;
-  background: #4A90E2;
-  color: white;
-  padding: 2px 6px;
-  border-radius: 3px;
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-
-.csta-translation[data-engine="gemini"]:hover::after {
-  opacity: 0.7;
+  opacity: 0.5;
+  font-style: italic;
 }
 
 /* Mark translated elements */
 [data-translated="true"] {
   position: relative;
-}
-
-/* Hover effect on original when translation exists */
-[data-translated="true"]:hover {
-  background-color: rgba(74, 144, 226, 0.05);
-  transition: background-color 0.2s;
 }
 
 /* Hidden translations */
@@ -84,9 +62,12 @@
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
   .csta-translation {
-    background: #1e1e1e;
-    color: #b0b0b0;
-    border-left-color: #5A9FE2;
+    color: #d0d0d0;
+    opacity: 0.75;
+  }
+
+  .csta-translation:hover {
+    opacity: 0.9;
   }
 
   .csta-translation.csta-mock {
@@ -95,7 +76,7 @@
   }
 
   [data-translated="true"]:hover {
-    background-color: rgba(90, 159, 226, 0.1);
+    background-color: rgba(90, 159, 226, 0.05);
   }
 }
 
