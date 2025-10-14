@@ -31,8 +31,8 @@ class FloatingButton {
     const button = document.createElement('button');
     button.id = 'csta-floating-button';
     button.className = 'csta-btn csta-btn-idle';
-    button.setAttribute('aria-label', 'Smart Translator');
-    button.setAttribute('title', 'Click to translate page');
+    button.setAttribute('aria-label', '智能翻译');
+    button.setAttribute('title', '点击翻译页面');
 
     button.innerHTML = `
       <svg class="csta-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -58,45 +58,45 @@ class FloatingButton {
 
     panel.innerHTML = `
       <div class="csta-panel-header">
-        <h3>🌐 Smart Translator</h3>
-        <button class="csta-panel-close" aria-label="Close panel">×</button>
+        <h3>🌐 智能翻译</h3>
+        <button class="csta-panel-close" aria-label="关闭面板">×</button>
       </div>
 
       <div class="csta-panel-body">
         <div class="csta-status-section">
-          <div class="csta-status-label">Status:</div>
+          <div class="csta-status-label">状态:</div>
           <div class="csta-status-value">
             <span class="csta-status-icon">⚪</span>
-            <span class="csta-status-text">Ready</span>
+            <span class="csta-status-text">就绪</span>
           </div>
         </div>
 
         <div class="csta-controls-section">
           <button class="csta-control-btn csta-btn-translate">
             <span class="csta-btn-icon">🌐</span>
-            Translate Page
+            翻译页面
           </button>
           <button class="csta-control-btn csta-btn-toggle" disabled>
             <span class="csta-btn-icon">⇄</span>
-            Toggle Display
+            切换显示
           </button>
           <button class="csta-control-btn csta-btn-retranslate" disabled>
             <span class="csta-btn-icon">🔄</span>
-            Retranslate
+            重新翻译
           </button>
         </div>
 
         <div class="csta-info-section">
           <div class="csta-info-item">
-            <span class="csta-info-label">Engine:</span>
+            <span class="csta-info-label">引擎:</span>
             <span class="csta-info-value csta-engine">-</span>
           </div>
           <div class="csta-info-item">
-            <span class="csta-info-label">Language:</span>
+            <span class="csta-info-label">语言:</span>
             <span class="csta-info-value csta-language">-</span>
           </div>
           <div class="csta-info-item">
-            <span class="csta-info-label">Translated:</span>
+            <span class="csta-info-label">已翻译:</span>
             <span class="csta-info-value csta-count">0</span>
           </div>
         </div>
@@ -104,10 +104,10 @@ class FloatingButton {
 
       <div class="csta-panel-footer">
         <button class="csta-footer-btn csta-btn-settings">
-          <span>⚙️</span> Settings
+          <span>⚙️</span> 设置
         </button>
         <button class="csta-footer-btn csta-btn-stats">
-          <span>📊</span> Stats
+          <span>📊</span> 统计
         </button>
       </div>
     `;
@@ -234,7 +234,7 @@ class FloatingButton {
     const statusIcon = this.panel.querySelector('.csta-status-icon');
 
     if (this.state === 'translated') {
-      statusText.textContent = `Translated (${this.stats.visible} visible)`;
+      statusText.textContent = `已翻译 (${this.stats.visible} 可见)`;
       statusIcon.textContent = '✓';
     }
 
@@ -261,32 +261,32 @@ class FloatingButton {
 
     switch (newState) {
       case 'idle':
-        this.button.setAttribute('title', 'Click to translate page');
-        statusText.textContent = 'Ready';
+        this.button.setAttribute('title', '点击翻译页面');
+        statusText.textContent = '就绪';
         statusIcon.textContent = '⚪';
         translateBtn.disabled = false;
         this.setProgress(0);
         break;
 
       case 'translating':
-        this.button.setAttribute('title', 'Translating...');
-        statusText.textContent = 'Translating...';
+        this.button.setAttribute('title', '翻译中...');
+        statusText.textContent = '翻译中...';
         statusIcon.textContent = '⏳';
         translateBtn.disabled = true;
         this.simulateProgress();
         break;
 
       case 'translated':
-        this.button.setAttribute('title', 'Translation complete (click to toggle)');
-        statusText.textContent = 'Translated';
+        this.button.setAttribute('title', '翻译完成(点击切换)');
+        statusText.textContent = '已翻译';
         statusIcon.textContent = '✓';
         translateBtn.disabled = true;
         this.setProgress(100);
         break;
 
       case 'error':
-        this.button.setAttribute('title', 'Translation failed (click to retry)');
-        statusText.textContent = 'Error occurred';
+        this.button.setAttribute('title', '翻译失败(点击重试)');
+        statusText.textContent = '发生错误';
         statusIcon.textContent = '⚠️';
         translateBtn.disabled = false;
         this.setProgress(0);
