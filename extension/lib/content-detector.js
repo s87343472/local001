@@ -46,13 +46,23 @@ class ContentDetector {
       '[role="contentinfo"]',
       '[role="complementary"]',
       '[aria-hidden="true"]',
-      '[class*="nav"]',
-      '[class*="menu"]',
-      '[class*="sidebar"]',
-      '[class*="ad"]',
-      '[id*="ad"]',
-      '[class*="comment"]',
-      '[id*="comment"]'
+      '.navigation',
+      '.navbar',
+      '.nav-menu',
+      '[class^="nav-"]',
+      '[class$="-nav"]',
+      '.menu',
+      '.sidebar',
+      '.advertisement',
+      '.ad-container',
+      '.ad-banner',
+      '[class^="ad-"]',
+      '[class$="-ad"]',
+      '#advertisement',
+      '#ad-container',
+      '.comments-section',
+      '#comments',
+      '[class^="comment-"]'
     ];
   }
 
