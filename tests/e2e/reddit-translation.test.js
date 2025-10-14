@@ -166,9 +166,15 @@ async function runTests() {
     console.log('📦 Launching Chrome with extension...');
     console.log(`   Extension path: ${CONFIG.extensionPath}`);
 
+    // Create temp user data dir for this test run
+    const os = require('os');
+    const userDataDir = path.join(os.tmpdir(), `chrome-test-${Date.now()}`);
+    console.log(`   User data dir: ${userDataDir}`);
+
     browser = await puppeteer.launch({
       headless: false, // Must be false for extensions
       executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', // Use system Chrome
+      userDataDir: userDataDir, // Use dedicated profile
       args: [
         `--disable-extensions-except=${CONFIG.extensionPath}`,
         `--load-extension=${CONFIG.extensionPath}`,
@@ -176,11 +182,9 @@ async function runTests() {
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
         '--disable-gpu',
-        '--disable-blink-features=AutomationControlled',
-        '--enable-logging',
-        '--v=1'
+        '--disable-blink-features=AutomationControlled'
       ],
-      dumpio: true, // Enable browser logs to see extension loading
+      dumpio: false, // Disable verbose logs
       protocolTimeout: 120000 // Increase protocol timeout to 120s
     });
 
