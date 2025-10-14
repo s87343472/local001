@@ -406,7 +406,19 @@ Do not include any explanations, labels, or markdown formatting.`;
     return new Promise((resolve) => {
       chrome.storage.sync.get(['apiKeys'], (data) => {
         const apiKeys = data.apiKeys || {};
-        const key = apiKeys[engine] || null;
+        const encodedKey = apiKeys[engine] || null;
+
+        // Decode base64-encoded API key
+        let key = null;
+        if (encodedKey) {
+          try {
+            key = atob(encodedKey);
+          } catch (e) {
+            console.error(`Failed to decode API key for '${engine}':`, e);
+            key = encodedKey; // Fallback to raw key if decode fails
+          }
+        }
+
         console.log(`[TranslationAPI] Getting API key for '${engine}':`, {
           hasKey: !!key,
           keyLength: key?.length,
