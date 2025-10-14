@@ -166,6 +166,12 @@ class ContentDetector {
    * @returns {Array<Object>} - Array of paragraph objects
    */
   extractParagraphs(contentArea) {
+    // Debug: Log all child elements of contentArea
+    console.log('[ContentDetector] Content area tag:', contentArea.tagName);
+    console.log('[ContentDetector] Direct children count:', contentArea.children.length);
+    const childTags = Array.from(contentArea.children).map(c => c.tagName.toLowerCase());
+    console.log('[ContentDetector] Child tags:', childTags);
+
     const paragraphs = [];
     let processedCount = 0;
     let acceptedCount = 0;
