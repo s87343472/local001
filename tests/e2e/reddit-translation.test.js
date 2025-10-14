@@ -35,6 +35,39 @@ const results = {
 };
 
 /**
+ * Get extension ID from loaded extensions
+ */
+async function getExtensionId(page) {
+  try {
+    // Navigate to extensions page
+    await page.goto('chrome://extensions/');
+    await page.waitForTimeout(1000);
+
+    // Get extension ID from the page
+    const extensionId = await page.evaluate(() => {
+      const extensions = document.querySelector('extensions-manager')
+        ?.shadowRoot?.querySelector('extensions-item-list')
+        ?.shadowRoot?.querySelectorAll('extensions-item');
+
+      if (extensions) {
+        for (const ext of extensions) {
+          const name = ext.shadowRoot?.querySelector('#name')?.textContent;
+          if (name?.includes('Translation') || name?.includes('Smart')) {
+            return ext.id;
+          }
+        }
+      }
+      return null;
+    });
+
+    return extensionId;
+  } catch (error) {
+    console.error('Error getting extension ID:', error.message);
+    return null;
+  }
+}
+
+/**
  * Utility: Wait for condition with timeout
  */
 async function waitFor(condition, timeout = 5000, interval = 100) {
@@ -104,6 +137,46 @@ async function runTests() {
     await page.setViewport({ width: 1920, height: 1080 });
 
     console.log('✓ Browser launched\n');
+
+    // Step 1.5: Configure extension API key via chrome.storage
+    console.log('⚙️  Configuring extension API key...');
+
+    // Get Gemini API key from environment variable
+    const geminiApiKey = process.env.GEMINI_API_KEY || 'test-api-key-for-e2e';
+
+    // Navigate to extension page to access chrome.storage API
+    const extensionId = await getExtensionId(page);
+    console.log(`Extension ID: ${extensionId}`);
+
+    if (extensionId) {
+      await page.goto(`chrome-extension://${extensionId}/options/options.html`);
+      await page.waitForTimeout(1000);
+
+      // Set API key and preferences in storage
+      await page.evaluate((apiKey) => {
+        return new Promise((resolve) => {
+          chrome.storage.sync.set({
+            apiKeys: {
+              gemini: btoa(apiKey) // Base64 encode like the extension does
+            },
+            preferences: {
+              targetLanguage: 'zh-CN',
+              defaultEngine: 'gemini',
+              professionalDomain: 'computer',
+              translationMode: 'smart',
+              autoTranslate: false
+            }
+          }, () => {
+            console.log('[E2E] Extension configured');
+            resolve();
+          });
+        });
+      }, geminiApiKey);
+
+      console.log('✓ API key configured\n');
+    } else {
+      console.warn('⚠️  Could not find extension ID, skipping API key setup');
+    }
 
     // Step 2: Navigate to Reddit
     console.log('🌐 Navigating to Reddit homepage...');

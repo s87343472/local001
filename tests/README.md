@@ -27,16 +27,17 @@ npm install
 This will install:
 - `puppeteer` v21.0.0 (includes Chromium)
 
-### 2. Configure Extension
+### 2. Set API Key (Optional)
 
-Before running tests, ensure:
+The test can use an environment variable for the Gemini API key:
 
-1. **Extension is built**: All files in `extension/` directory are ready
-2. **API Key configured**:
-   - Manually load extension in Chrome once
-   - Open Settings and configure Gemini API key
-   - Save settings
-   - This persists in Chrome's storage for tests
+```bash
+export GEMINI_API_KEY="your-actual-api-key"
+```
+
+**Or** the test will use a placeholder key for basic testing (translation will fail but UI can be tested).
+
+**Note**: The test now automatically configures the extension via `chrome.storage.sync` API, so no manual setup is required!
 
 ## Running Tests
 
