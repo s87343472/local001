@@ -196,28 +196,88 @@ async function runTests() {
 
     console.log('✓ Browser launched\n');
 
-    // Step 1.5: Check if extension loaded
-    console.log('🔍 Checking if extension loaded...');
+    // Step 1.5: Check if extension loaded via chrome://extensions/
+    console.log('🔍 Verifying extension loaded in chrome://extensions/...');
 
-    // Method: Visit any page first to ensure extension context is ready
+    await page.goto('chrome://extensions/');
+    await page.waitForTimeout(2000);
+
+    // Enable developer mode if needed
+    const devModeEnabled = await page.evaluate(() => {
+      const manager = document.querySelector('extensions-manager');
+      if (!manager || !manager.shadowRoot) return false;
+
+      const toolbar = manager.shadowRoot.querySelector('extensions-toolbar');
+      if (!toolbar || !toolbar.shadowRoot) return false;
+
+      const toggle = toolbar.shadowRoot.querySelector('#devMode');
+      if (toggle && !toggle.checked) {
+        toggle.click();
+        return true;
+      }
+      return toggle?.checked || false;
+    });
+    console.log(`   Developer mode: ${devModeEnabled ? 'enabled' : 'already enabled'}`);
+
+    await page.waitForTimeout(1000);
+
+    // Check for loaded extensions
+    const extensionInfo = await page.evaluate(() => {
+      const manager = document.querySelector('extensions-manager');
+      if (!manager || !manager.shadowRoot) return { found: false };
+
+      const itemList = manager.shadowRoot.querySelector('extensions-item-list');
+      if (!itemList || !itemList.shadowRoot) return { found: false };
+
+      const items = Array.from(itemList.shadowRoot.querySelectorAll('extensions-item'));
+      const extensions = items.map(item => {
+        if (!item.shadowRoot) return null;
+        const name = item.shadowRoot.querySelector('#name')?.textContent || '';
+        const id = item.id;
+        const errors = item.shadowRoot.querySelector('#errors-button')?.textContent || '0 errors';
+        return { name, id, errors };
+      }).filter(e => e !== null);
+
+      return { found: true, extensions };
+    });
+
+    console.log('   Extensions found:', extensionInfo);
+
+    // Try to find and use a service worker target for configuration
     await page.goto('https://example.com');
     await page.waitForTimeout(3000);
 
-    // Try to find and use a service worker target for configuration
     const targets = await browser.targets();
     console.log(`   Found ${targets.length} targets:`, targets.map(t => ({
       type: t.type(),
       url: t.url().substring(0, 60) + (t.url().length > 60 ? '...' : '')
     })));
 
+    // Look for our extension in the loaded extensions
+    let extensionId = null;
+    if (extensionInfo.found && extensionInfo.extensions.length > 0) {
+      const ourExt = extensionInfo.extensions.find(e =>
+        e.name.includes('Translation') || e.name.includes('Smart')
+      );
+      if (ourExt) {
+        extensionId = ourExt.id;
+        console.log(`   Extension found: ${ourExt.name} (${extensionId})`);
+        if (ourExt.errors !== '0 errors') {
+          console.warn(`   ⚠️  Extension has errors: ${ourExt.errors}`);
+        }
+      }
+    }
+
     const extensionTarget = targets.find(target =>
       target.type() === 'service_worker' &&
       target.url().includes('chrome-extension://')
     );
 
-    if (extensionTarget) {
-      const extensionId = new URL(extensionTarget.url()).hostname;
-      console.log(`Extension ID found: ${extensionId}`);
+    if (extensionTarget || extensionId) {
+      if (!extensionId) {
+        extensionId = new URL(extensionTarget.url()).hostname;
+      }
+      console.log(`✓ Extension ID: ${extensionId}\n`);
 
       // Navigate to options page and configure
       await page.goto(`chrome-extension://${extensionId}/options/options.html`);
