@@ -258,14 +258,15 @@ class ContentDetector {
     }
 
     // Only process paragraph-like elements
-    const paragraphTags = ['p', 'div', 'section', 'article', 'li', 'dd', 'dt', 'td', 'th', 'blockquote'];
+    const paragraphTags = ['p', 'div', 'section', 'article', 'li', 'dd', 'dt', 'td', 'th', 'blockquote', 'span', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
 
     if (paragraphTags.includes(tagName)) {
       console.log(`[ContentDetector] ACCEPTED ${tagName} - is paragraph-like element`);
       return NodeFilter.FILTER_ACCEPT;
     }
 
-    console.log(`[ContentDetector] SKIPPED ${tagName} - not a paragraph-like element`);
+    // For custom elements (like shreddit-post), skip but continue traversing children
+    console.log(`[ContentDetector] SKIPPED ${tagName} - not a paragraph-like element (will traverse children)`);
     return NodeFilter.FILTER_SKIP;
   }
 
