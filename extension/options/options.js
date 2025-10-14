@@ -79,6 +79,7 @@ class OptionsManager {
 
     try {
       this.isLoading = true;
+      this.updateSaveButton();
       this.showStatus('Saving settings...', 'info');
 
       const settings = this.collectSettings();
@@ -86,7 +87,6 @@ class OptionsManager {
 
       this.currentSettings = { ...this.currentSettings, ...settings };
       this.isDirty = false;
-      this.updateSaveButton();
       this.showStatus('Settings saved successfully!', 'success');
 
       // Auto-hide success message after 3 seconds
@@ -103,6 +103,7 @@ class OptionsManager {
       this.showStatus('Failed to save settings. Please try again.', 'error');
     } finally {
       this.isLoading = false;
+      this.updateSaveButton();
     }
   }
 
