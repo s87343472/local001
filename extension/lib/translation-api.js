@@ -121,6 +121,7 @@ export class TranslationAPI {
         },
         body: JSON.stringify({
           contents: [{
+            role: 'user',
             parts: [{
               text: prompt
             }]
@@ -184,12 +185,16 @@ Do NOT add explanations, labels, or any other text. Only return the JSON array.`
     try {
       const content = response.candidates?.[0]?.content?.parts?.[0]?.text;
       if (!content) {
+        console.error('Gemini response structure:', JSON.stringify(response, null, 2));
         throw new Error('No content in Gemini response');
       }
+
+      console.log('Gemini returned:', content.substring(0, 200) + (content.length > 200 ? '...' : ''));
 
       // Extract JSON array from response
       const jsonMatch = content.match(/\[[\s\S]*\]/);
       if (!jsonMatch) {
+        console.error('Full Gemini response text:', content);
         throw new Error('No JSON array found in response');
       }
 
@@ -198,6 +203,8 @@ Do NOT add explanations, labels, or any other text. Only return the JSON array.`
       if (!Array.isArray(translations)) {
         throw new Error('Response is not an array');
       }
+
+      console.log(`Parsed ${translations.length} translations from Gemini`);
 
       // Map to paragraph hashes
       return paragraphs.map((p, i) => ({
