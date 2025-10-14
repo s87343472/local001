@@ -135,6 +135,27 @@ async function runTests() {
       `Expected Reddit in title, got: ${pageTitle}`
     );
 
+    // Debug: Check if content script loaded
+    console.log('🔍 Checking content script status...');
+    const contentScriptLoaded = await page.evaluate(() => {
+      return {
+        hasMessageRouter: typeof MessageRouter !== 'undefined',
+        hasContentDetector: typeof ContentDetector !== 'undefined',
+        hasFloatingButton: typeof FloatingButton !== 'undefined',
+        hasWindow: typeof window !== 'undefined',
+        scripts: Array.from(document.scripts).map(s => s.src).filter(s => s.includes('content'))
+      };
+    });
+    console.log('Content script status:', JSON.stringify(contentScriptLoaded, null, 2));
+
+    // Check for console errors
+    const errors = [];
+    page.on('console', msg => {
+      if (msg.type() === 'error') {
+        errors.push(msg.text());
+      }
+    });
+
     // Step 3: Wait for floating button to appear
     console.log('⏳ Waiting for floating button...');
 
@@ -151,11 +172,24 @@ async function runTests() {
     );
 
     if (!buttonAppeared) {
-      // Log console for debugging
-      const logs = await page.evaluate(() => {
-        return window.console.logs || [];
+      // Log console errors
+      console.log('Console errors:', errors);
+
+      // Check DOM for any extension elements
+      const domCheck = await page.evaluate(() => {
+        return {
+          allDivs: document.querySelectorAll('div[id*="csta"]').length,
+          allElements: document.querySelectorAll('[class*="csta"]').length,
+          bodyChildren: document.body.childElementCount,
+          lastChildren: Array.from(document.body.children).slice(-5).map(el => ({
+            tag: el.tagName,
+            id: el.id,
+            classes: el.className
+          }))
+        };
       });
-      console.log('Console logs:', logs);
+      console.log('DOM check:', JSON.stringify(domCheck, null, 2));
+
       throw new Error('Cannot continue without floating button');
     }
 
