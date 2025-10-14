@@ -17,6 +17,17 @@ console.log('[Content Script] Testing class availability:', {
   FloatingButton: typeof FloatingButton
 });
 
+// Utility: Simple hash function for text
+function simpleHash(text) {
+  let hash = 0;
+  for (let i = 0; i < text.length; i++) {
+    const char = text.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return hash.toString(36);
+}
+
 // Initialize
 console.log('[Content Script] Creating detector...');
 const detector = new ContentDetector();
@@ -44,6 +55,12 @@ if (document.readyState === 'loading') {
 async function analyzePage() {
   console.log('Analyzing page content...');
 
+  // Check if we're on Reddit - use specialized extraction
+  if (window.location.hostname.includes('reddit.com')) {
+    console.log('[Content] Detected Reddit, using specialized extraction');
+    return await analyzeRedditPage();
+  }
+
   const analysis = detector.analyze();
 
   console.log(`Content analysis complete:`, {
@@ -58,6 +75,52 @@ async function analyzePage() {
   return {
     ...analysis,
     paragraphs: paragraphsWithCache
+  };
+}
+
+/**
+ * Analyze Reddit page - extract post titles only
+ * @returns {Promise<Object>} - Analysis result
+ */
+async function analyzeRedditPage() {
+  const startTime = performance.now();
+  const paragraphs = [];
+
+  // Find all post elements
+  const posts = document.querySelectorAll('shreddit-post');
+  console.log(`[Reddit] Found ${posts.length} posts`);
+
+  for (const post of posts) {
+    // Extract post title (slot="title")
+    const titleSlot = post.querySelector('[slot="title"]');
+    if (titleSlot) {
+      const text = titleSlot.textContent.trim();
+      if (text && text.length > 10 && text.length < 500) {
+        const hash = simpleHash(text);
+        paragraphs.push({
+          text,
+          hash,
+          element: titleSlot,
+          length: text.length
+        });
+        console.log(`[Reddit] Extracted title: "${text.substring(0, 50)}..."`);
+      }
+    }
+  }
+
+  const processingTime = Math.round(performance.now() - startTime);
+  const totalChars = paragraphs.reduce((sum, p) => sum + p.length, 0);
+
+  console.log(`[Reddit] Extracted ${paragraphs.length} post titles in ${processingTime}ms`);
+
+  // Check cache
+  const paragraphsWithCache = await checkCache(paragraphs);
+
+  return {
+    paragraphs: paragraphsWithCache,
+    count: paragraphs.length,
+    totalChars,
+    processingTime
   };
 }
 
