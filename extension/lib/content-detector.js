@@ -159,11 +159,21 @@ class ContentDetector {
    */
   extractParagraphs(contentArea) {
     const paragraphs = [];
+    let processedCount = 0;
+    let acceptedCount = 0;
+
     const walker = document.createTreeWalker(
       contentArea,
       NodeFilter.SHOW_ELEMENT,
       {
-        acceptNode: (node) => this.shouldProcessNode(node)
+        acceptNode: (node) => {
+          processedCount++;
+          const result = this.shouldProcessNode(node);
+          if (result === NodeFilter.FILTER_ACCEPT) {
+            acceptedCount++;
+          }
+          return result;
+        }
       }
     );
 
@@ -179,6 +189,8 @@ class ContentDetector {
         });
       }
     }
+
+    console.log(`[ContentDetector] Processed ${processedCount} nodes, accepted ${acceptedCount}, extracted ${paragraphs.length} paragraphs`);
 
     // Merge short consecutive paragraphs
     return this.mergeParagraphs(paragraphs);
