@@ -28,6 +28,121 @@ function simpleHash(text) {
   return hash.toString(36);
 }
 
+/**
+ * Show user notification for errors and important events
+ * @param {string} type - Notification type: 'error' | 'warning' | 'success' | 'info'
+ * @param {string} title - Notification title
+ * @param {string} message - Notification message
+ * @param {Error} [error] - Optional error object for detailed logging
+ */
+async function showNotification(type, title, message, error = null) {
+  // Log to console for debugging
+  const logMethod = type === 'error' ? 'error' : type === 'warning' ? 'warn' : 'log';
+  console[logMethod](`[Notification] ${title}: ${message}`, error || '');
+
+  // Create notification icon based on type
+  const iconMap = {
+    error: 'icon-error.png',
+    warning: 'icon-warning.png',
+    success: 'icon-success.png',
+    info: 'icon-info.png'
+  };
+
+  try {
+    await chrome.runtime.sendMessage({
+      action: 'SHOW_NOTIFICATION',
+      data: {
+        type: type,
+        title: title,
+        message: message,
+        iconUrl: chrome.runtime.getURL(`assets/${iconMap[type] || 'icon-info.png'}`)
+      }
+    });
+  } catch (notifError) {
+    // Fallback: if notification fails, at least console.error is visible
+    console.error('[Notification] Failed to show notification:', notifError);
+  }
+}
+
+/**
+ * Parse error and return user-friendly message
+ * @param {Error} error - Error object
+ * @returns {Object} - { title, message, actionable }
+ */
+function parseError(error) {
+  const errorMsg = error.message || error.toString();
+
+  // API Key errors
+  if (errorMsg.includes('API key not configured')) {
+    return {
+      title: 'API Key Required',
+      message: 'Please configure your Gemini API key in extension settings. Click the extension icon → Settings → API Keys.',
+      actionable: true
+    };
+  }
+
+  // HTTP 401/403 - Authentication errors
+  if (errorMsg.includes('401') || errorMsg.includes('403') || errorMsg.includes('Unauthorized')) {
+    return {
+      title: 'Authentication Failed',
+      message: 'Your API key is invalid or expired. Please update it in extension settings.',
+      actionable: true
+    };
+  }
+
+  // HTTP 429 - Rate limit
+  if (errorMsg.includes('429') || errorMsg.includes('rate limit') || errorMsg.includes('quota')) {
+    return {
+      title: 'API Quota Exceeded',
+      message: 'You have exceeded the API request limit. Please wait a few minutes and try again, or check your API quota.',
+      actionable: true
+    };
+  }
+
+  // HTTP 500/502/503 - Server errors
+  if (errorMsg.match(/50[0-9]/)) {
+    return {
+      title: 'Server Error',
+      message: 'The translation service is temporarily unavailable. Please try again in a few moments.',
+      actionable: false
+    };
+  }
+
+  // Network errors
+  if (errorMsg.includes('fetch') || errorMsg.includes('network') || errorMsg.includes('NetworkError')) {
+    return {
+      title: 'Network Error',
+      message: 'Unable to connect to translation service. Please check your internet connection and try again.',
+      actionable: false
+    };
+  }
+
+  // Parse errors
+  if (errorMsg.includes('parse') || errorMsg.includes('JSON')) {
+    return {
+      title: 'Translation Error',
+      message: 'Received invalid response from translation service. Please try again.',
+      actionable: false
+    };
+  }
+
+  // Validation errors
+  if (errorMsg.includes('mismatch') || errorMsg.includes('validate')) {
+    return {
+      title: 'Translation Error',
+      message: 'Translation validation failed. Some content may not have been translated correctly.',
+      actionable: false
+    };
+  }
+
+  // Generic fallback
+  return {
+    title: 'Translation Failed',
+    message: `An unexpected error occurred: ${errorMsg.substring(0, 100)}`,
+    actionable: false
+  };
+}
+
 // Initialize
 console.log('[Content Script] Creating detector...');
 const detector = new ContentDetector();
@@ -243,6 +358,11 @@ async function translatePage() {
     if (currentAnalysis.count === 0) {
       console.warn('No translatable content found');
       floatingButton.setState('error');
+      await showNotification(
+        'warning',
+        'No Content Found',
+        'Could not find any translatable text on this page. The page may be using dynamic content or have no readable text.'
+      );
       return;
     }
 
@@ -259,6 +379,10 @@ async function translatePage() {
   } catch (error) {
     console.error('Translation failed:', error);
     floatingButton.setState('error');
+
+    // Show user-friendly error notification
+    const errorInfo = parseError(error);
+    await showNotification('error', errorInfo.title, errorInfo.message, error);
   } finally {
     isTranslating = false;
   }
@@ -315,6 +439,11 @@ async function translateSelection(text) {
     }
   } catch (error) {
     console.error('Selection translation error:', error);
+
+    // Show user-friendly error notification
+    const errorInfo = parseError(error);
+    await showNotification('error', errorInfo.title, errorInfo.message, error);
+
     throw error;
   }
 }
@@ -350,6 +479,11 @@ async function handleDynamicContent(addedNodes) {
     await renderer.renderProgressive(translatedParagraphs);
   } catch (error) {
     console.error('Failed to translate dynamic content:', error);
+
+    // Show warning for dynamic content errors (less critical than main page)
+    const errorInfo = parseError(error);
+    await showNotification('warning', 'Dynamic Content Error',
+      `Failed to translate new content: ${errorInfo.message}`, error);
   }
 }
 

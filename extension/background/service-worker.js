@@ -110,6 +110,17 @@ async function handleMessage(message, sender) {
         chrome.tabs.create({ url });
         return { success: true };
 
+      case 'SHOW_NOTIFICATION':
+        // Create user notification
+        chrome.notifications.create({
+          type: 'basic',
+          iconUrl: data.iconUrl || chrome.runtime.getURL('assets/icon-48.png'),
+          title: data.title,
+          message: data.message,
+          priority: data.type === 'error' ? 2 : 1
+        });
+        return { success: true };
+
       default:
         console.warn('Unknown action:', action);
         return { success: false, error: 'Unknown action' };
@@ -141,12 +152,36 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
         });
       } else {
         console.error('Translation failed:', response?.error);
+        // Show error notification
+        chrome.notifications.create({
+          type: 'basic',
+          iconUrl: chrome.runtime.getURL('assets/icon-48.png'),
+          title: 'Translation Failed',
+          message: response?.error || 'Could not translate selected text. Please try again.',
+          priority: 2
+        });
       }
     } catch (error) {
       console.error('Failed to translate selection:', error);
       // Content script might not be loaded on this page
       if (error.message && error.message.includes('not establish connection')) {
         console.warn('Content script not loaded on this page');
+        chrome.notifications.create({
+          type: 'basic',
+          iconUrl: chrome.runtime.getURL('assets/icon-48.png'),
+          title: 'Extension Not Active',
+          message: 'Translation is not available on this page. Try reloading the page or use a different page.',
+          priority: 1
+        });
+      } else {
+        // Generic error notification
+        chrome.notifications.create({
+          type: 'basic',
+          iconUrl: chrome.runtime.getURL('assets/icon-48.png'),
+          title: 'Translation Error',
+          message: error.message || 'An unexpected error occurred while translating.',
+          priority: 2
+        });
       }
     }
   }
