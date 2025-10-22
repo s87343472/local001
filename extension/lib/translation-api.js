@@ -458,7 +458,16 @@ Do not include any explanations, labels, or markdown formatting.`;
     return new Promise((resolve) => {
       chrome.storage.sync.get(['apiKeys'], (data) => {
         const apiKeys = data.apiKeys || {};
-        const encodedKey = apiKeys[engine] || null;
+
+        // Support both 'google' and 'googleTranslate' naming conventions
+        let encodedKey = apiKeys[engine];
+        if (!encodedKey && engine === 'googleTranslate') {
+          encodedKey = apiKeys.google;
+        }
+
+        if (!encodedKey) {
+          encodedKey = null;
+        }
 
         // Decode base64-encoded API key
         let key = null;
