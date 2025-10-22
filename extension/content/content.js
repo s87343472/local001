@@ -412,5 +412,43 @@ window.translatePage = translatePage;
 window.toggleTranslations = toggleTranslations;
 window.getTranslationStats = () => renderer.getStats();
 
+// Check auto-translate setting on page load
+async function checkAutoTranslate() {
+  try {
+    const result = await chrome.storage.sync.get(['preferences', 'blacklist']);
+    const preferences = result.preferences || {};
+    const blacklist = result.blacklist || [];
+
+    // Check if current page is blacklisted
+    const hostname = window.location.hostname;
+    const isBlacklisted = blacklist.some(domain => hostname.includes(domain));
+
+    if (isBlacklisted) {
+      console.log('[Content Script] Auto-translate disabled: page is blacklisted');
+      return;
+    }
+
+    // Check auto-translate setting
+    if (preferences.autoTranslate === true) {
+      console.log('[Content Script] Auto-translate enabled, starting translation...');
+      // Delay slightly to ensure page is fully loaded
+      setTimeout(() => {
+        translatePage();
+      }, 1000);
+    } else {
+      console.log('[Content Script] Auto-translate disabled');
+    }
+  } catch (error) {
+    console.error('[Content Script] Failed to check auto-translate setting:', error);
+  }
+}
+
+// Check and trigger auto-translate if enabled
+if (document.readyState === 'complete') {
+  checkAutoTranslate();
+} else {
+  window.addEventListener('load', checkAutoTranslate);
+}
+
 // Page loaded - ready for commands
 console.log('Content script ready');
