@@ -6,6 +6,63 @@
 export class StorageManager {
   constructor() {
     this.encryptionKey = null;
+    this.ENCRYPTION_SALT = 'csta-v1'; // Version-specific salt
+  }
+
+  /**
+   * Generate encryption key from device fingerprint
+   * @returns {Promise<CryptoKey>} - Encryption key
+   */
+  async getEncryptionKey() {
+    if (this.encryptionKey) {
+      return this.encryptionKey;
+    }
+
+    // Use device-specific information as key material
+    const keyMaterial = await this.getKeyMaterial();
+    const salt = new TextEncoder().encode(this.ENCRYPTION_SALT);
+
+    // Derive key using PBKDF2
+    this.encryptionKey = await crypto.subtle.deriveKey(
+      {
+        name: 'PBKDF2',
+        salt: salt,
+        iterations: 100000,
+        hash: 'SHA-256'
+      },
+      keyMaterial,
+      { name: 'AES-GCM', length: 256 },
+      false, // not extractable
+      ['encrypt', 'decrypt']
+    );
+
+    return this.encryptionKey;
+  }
+
+  /**
+   * Get key material from device fingerprint
+   * @returns {Promise<CryptoKey>} - Key material
+   */
+  async getKeyMaterial() {
+    // Create device fingerprint from available information
+    const fingerprint = [
+      navigator.userAgent,
+      navigator.language,
+      new Date().getTimezoneOffset(),
+      screen.width,
+      screen.height
+    ].join('|');
+
+    const enc = new TextEncoder();
+    const keyData = enc.encode(fingerprint);
+
+    return await crypto.subtle.importKey(
+      'raw',
+      keyData,
+      { name: 'PBKDF2' },
+      false,
+      ['deriveKey']
+    );
   }
 
   /**
@@ -151,45 +208,133 @@ export class StorageManager {
   }
 
   /**
-   * Obfuscate API keys
-   * NOTE: This is NOT encryption, just base64 encoding to prevent casual viewing
-   * API keys in chrome.storage.sync are already somewhat protected by Chrome's security model
-   * For true security, users should use environment-specific keys and follow principle of least privilege
-   *
-   * @param {Object} apiKeys - API keys object
-   * @returns {Promise<Object>} - Obfuscated API keys
+   * Encrypt API keys using AES-256-GCM
+   * @param {Object} apiKeys - API keys object { gemini: 'key1', googleTranslate: 'key2' }
+   * @returns {Promise<Object>} - Encrypted API keys with format { gemini: 'iv:ciphertext', ... }
    */
   async encryptApiKeys(apiKeys) {
-    // SECURITY NOTE: This is obfuscation, not encryption
-    // Base64 encoding prevents casual viewing but is trivially reversible
-    // Chrome.storage.sync provides some OS-level protection
-    const obfuscated = {};
-    for (const [key, value] of Object.entries(apiKeys)) {
-      if (value) {
-        obfuscated[key] = btoa(value);
+    const encrypted = {};
+    const key = await this.getEncryptionKey();
+
+    for (const [keyName, plainKey] of Object.entries(apiKeys)) {
+      if (!plainKey) continue;
+
+      try {
+        // Generate random IV (12 bytes for AES-GCM)
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+
+        // Encrypt the API key
+        const encoder = new TextEncoder();
+        const data = encoder.encode(plainKey);
+
+        const ciphertext = await crypto.subtle.encrypt(
+          {
+            name: 'AES-GCM',
+            iv: iv
+          },
+          key,
+          data
+        );
+
+        // Store as "iv:ciphertext" in base64
+        const ivBase64 = this.arrayBufferToBase64(iv);
+        const ciphertextBase64 = this.arrayBufferToBase64(ciphertext);
+        encrypted[keyName] = `${ivBase64}:${ciphertextBase64}`;
+
+      } catch (error) {
+        console.error(`Failed to encrypt API key '${keyName}':`, error);
+        // Fall back to legacy base64 for compatibility
+        encrypted[keyName] = `legacy:${btoa(plainKey)}`;
       }
     }
-    return obfuscated;
+
+    return encrypted;
   }
 
   /**
-   * De-obfuscate API keys
-   * @param {Object} obfuscatedKeys - Obfuscated API keys
+   * Decrypt API keys using AES-256-GCM
+   * @param {Object} encryptedKeys - Encrypted API keys
    * @returns {Promise<Object>} - Plain API keys
    */
-  async decryptApiKeys(obfuscatedKeys) {
+  async decryptApiKeys(encryptedKeys) {
     const plain = {};
-    for (const [key, value] of Object.entries(obfuscatedKeys)) {
-      if (value) {
-        try {
-          plain[key] = atob(value);
-        } catch (e) {
-          console.error('Failed to decode key:', key);
-          plain[key] = null;
+    const key = await this.getEncryptionKey();
+
+    for (const [keyName, encryptedValue] of Object.entries(encryptedKeys)) {
+      if (!encryptedValue) continue;
+
+      try {
+        // Check if this is legacy base64-only format
+        if (encryptedValue.startsWith('legacy:')) {
+          plain[keyName] = atob(encryptedValue.substring(7));
+          continue;
         }
+
+        // Check if this is old base64-only format (no prefix, no colon)
+        if (!encryptedValue.includes(':')) {
+          // Try to decode as base64 (legacy format)
+          try {
+            plain[keyName] = atob(encryptedValue);
+            continue;
+          } catch (e) {
+            console.error(`Failed to decode legacy key '${keyName}':`, e);
+            plain[keyName] = null;
+            continue;
+          }
+        }
+
+        // New encrypted format: "iv:ciphertext"
+        const [ivBase64, ciphertextBase64] = encryptedValue.split(':');
+        const iv = this.base64ToArrayBuffer(ivBase64);
+        const ciphertext = this.base64ToArrayBuffer(ciphertextBase64);
+
+        const decrypted = await crypto.subtle.decrypt(
+          {
+            name: 'AES-GCM',
+            iv: iv
+          },
+          key,
+          ciphertext
+        );
+
+        const decoder = new TextDecoder();
+        plain[keyName] = decoder.decode(decrypted);
+
+      } catch (error) {
+        console.error(`Failed to decrypt API key '${keyName}':`, error);
+        plain[keyName] = null;
       }
     }
+
     return plain;
+  }
+
+  /**
+   * Convert ArrayBuffer to Base64 string
+   * @param {ArrayBuffer|Uint8Array} buffer - Buffer to convert
+   * @returns {string} - Base64 string
+   */
+  arrayBufferToBase64(buffer) {
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+  }
+
+  /**
+   * Convert Base64 string to ArrayBuffer
+   * @param {string} base64 - Base64 string
+   * @returns {Uint8Array} - Array buffer
+   */
+  base64ToArrayBuffer(base64) {
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes;
   }
 
   /**
