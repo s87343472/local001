@@ -187,24 +187,38 @@ export class StorageManager {
    * @param {Object} translation - The translation data
    */
   async addToCache(hash, translation) {
-    const data = await chrome.storage.local.get('translationCache');
+    const data = await chrome.storage.local.get(['translationCache', 'cacheMeta']);
     const cache = data.translationCache || {};
+    const meta = data.cacheMeta || { accessOrder: [] };
 
-    // Add new entry
+    // Update or add entry
     cache[hash] = {
       ...translation,
       timestamp: Date.now()
     };
 
-    // Implement LRU: Keep only 1000 most recent entries
-    const entries = Object.entries(cache);
-    if (entries.length > 1000) {
-      entries.sort((a, b) => b[1].timestamp - a[1].timestamp);
-      const newCache = Object.fromEntries(entries.slice(0, 1000));
-      await chrome.storage.local.set({ translationCache: newCache });
-    } else {
-      await chrome.storage.local.set({ translationCache: cache });
+    // Update LRU access order
+    // Remove if already exists, then add to end (most recent)
+    const index = meta.accessOrder.indexOf(hash);
+    if (index > -1) {
+      meta.accessOrder.splice(index, 1);
     }
+    meta.accessOrder.push(hash);
+
+    // Implement LRU: Keep only 1000 most recent entries
+    if (meta.accessOrder.length > 1000) {
+      // Remove oldest entries (from beginning of array)
+      const toRemove = meta.accessOrder.slice(0, meta.accessOrder.length - 1000);
+      for (const oldHash of toRemove) {
+        delete cache[oldHash];
+      }
+      meta.accessOrder = meta.accessOrder.slice(-1000); // Keep last 1000
+    }
+
+    await chrome.storage.local.set({
+      translationCache: cache,
+      cacheMeta: meta
+    });
   }
 
   /**
