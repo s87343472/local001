@@ -5,7 +5,8 @@
 
 export class TranslationAPI {
   constructor() {
-    this.geminiEndpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+    // Use Gemini 1.5 Flash (latest stable model)
+    this.geminiEndpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
     this.googleTranslateEndpoint = 'https://translation.googleapis.com/language/translate/v2';
 
     // Rate limiting
