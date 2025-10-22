@@ -45,12 +45,15 @@ export class StorageManager {
    */
   async getKeyMaterial() {
     // Create device fingerprint from available information
+    // NOTE: Service Worker doesn't have access to 'screen' object, so we use alternative fingerprinting
     const fingerprint = [
       navigator.userAgent,
       navigator.language,
       new Date().getTimezoneOffset(),
-      screen.width,
-      screen.height
+      // Use chrome.runtime.id as device-specific identifier (unique per extension install)
+      chrome.runtime.id,
+      // Add platform info if available
+      navigator.platform || 'unknown'
     ].join('|');
 
     const enc = new TextEncoder();
