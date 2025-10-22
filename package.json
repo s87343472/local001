@@ -4,8 +4,16 @@
   "description": "E2E tests for Chrome translation extension",
   "scripts": {
     "test:e2e": "node tests/e2e/reddit-translation.test.js",
-    "test:unit": "echo 'Unit tests not implemented yet'",
-    "test:all": "npm run test:e2e"
+    "test:unit": "jest --testMatch='**/tests/unit/**/*.test.js'",
+    "test:all": "npm run test:unit && npm run test:e2e"
+  },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "testMatch": ["**/tests/unit/**/*.test.js"],
+    "collectCoverageFrom": [
+      "extension/lib/**/*.js",
+      "!extension/lib/*-es6.js"
+    ]
   },
   "devDependencies": {
     "puppeteer": "^21.0.0"
