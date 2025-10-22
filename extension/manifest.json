@@ -3,6 +3,7 @@
   "name": "Chrome Smart Translation Assistant",
   "version": "0.1.0",
   "description": "Professional translation with bilingual display, accurate technical terms, and privacy-focused design.",
+  "homepage_url": "https://github.com/s87343472/local001",
 
   "permissions": [
     "storage",
