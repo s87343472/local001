@@ -29,6 +29,8 @@ chrome.runtime.onInstalled.addListener(async (details) => {
   }
 
   // Create context menu (for all install reasons)
+  // Remove all existing menus first to avoid duplicate errors
+  await chrome.contextMenus.removeAll();
   chrome.contextMenus.create({
     id: 'translate-selection',
     title: 'Translate selection',
