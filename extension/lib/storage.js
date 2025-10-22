@@ -161,6 +161,20 @@ export class StorageManager {
   }
 
   /**
+   * Clear all statistics
+   */
+  async clearStatistics() {
+    await chrome.storage.local.set({
+      statistics: {
+        totalCharacters: 0,
+        totalRequests: 0,
+        lastUsedDate: null,
+        monthlyUsage: {}
+      }
+    });
+  }
+
+  /**
    * Get translation cache
    * @param {string} hash - The text hash
    * @returns {Promise<Object|null>} - Cached translation or null

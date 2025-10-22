@@ -587,14 +587,7 @@ class OptionsManager {
    */
   async clearStatistics() {
     try {
-      await MessageRouter.sendToBackground('UPDATE_SETTINGS', {
-        statistics: {
-          totalCharacters: 0,
-          totalRequests: 0,
-          lastUsedDate: null,
-          monthlyUsage: {}
-        }
-      });
+      await MessageRouter.sendToBackground('CLEAR_STATISTICS');
 
       // Refresh display
       this.loadStatistics();

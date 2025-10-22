@@ -94,6 +94,10 @@ async function handleMessage(message, sender) {
       case 'GET_STATISTICS':
         return await storage.getStatistics();
 
+      case 'CLEAR_STATISTICS':
+        await storage.clearStatistics();
+        return { success: true };
+
       case 'GET_FROM_CACHE':
         const cached = await storage.getFromCache(data.hash);
         return { success: true, result: cached };
