@@ -30,6 +30,57 @@ export class TranslationAPI {
 - Branch → 分支 (not 树枝)
 - Merge → 合并 (not 融合)
       `.trim(),
+      business: `
+- Revenue → 营收 (not 收入)
+- Profit → 利润 (not 收益)
+- Loss → 亏损 (not 损失)
+- Asset → 资产 (not 财产)
+- Liability → 负债 (not 责任)
+- Equity → 权益 (not 公平)
+- Stakeholder → 利益相关方 (not 股东)
+- Shareholder → 股东 (not 利益相关方)
+- ROI (Return on Investment) → 投资回报率
+- KPI (Key Performance Indicator) → 关键绩效指标
+- B2B → 企业对企业
+- B2C → 企业对消费者
+- Quarter → 季度 (not 四分之一)
+- Fiscal Year → 财政年度
+- Cash Flow → 现金流
+      `.trim(),
+      science: `
+- Hypothesis → 假设 (not 猜想)
+- Theory → 理论 (not 理论性)
+- Experiment → 实验 (not 试验)
+- Variable → 变量 (not 可变的)
+- Control → 对照组 (not 控制)
+- Sample → 样本 (not 样品)
+- Population → 总体 (not 人口)
+- Correlation → 相关性 (not 关联)
+- Causation → 因果关系 (not 原因)
+- Significant → 显著的 (not 重要的)
+- Peer Review → 同行评审
+- Methodology → 方法论
+- Data Set → 数据集
+- Observation → 观察 (not 观测)
+- Conclusion → 结论 (not 总结)
+      `.trim(),
+      medical: `
+- Symptom → 症状 (not 迹象)
+- Diagnosis → 诊断 (not 诊断学)
+- Prognosis → 预后 (not 预测)
+- Treatment → 治疗 (not 处理)
+- Therapy → 疗法 (not 治疗)
+- Prescription → 处方 (not 规定)
+- Syndrome → 综合征 (not 症候群)
+- Chronic → 慢性的 (not 长期的)
+- Acute → 急性的 (not 严重的)
+- Benign → 良性的 (not 温和的)
+- Malignant → 恶性的 (not 恶意的)
+- Pathogen → 病原体 (not 病菌)
+- Antibody → 抗体 (not 抗菌)
+- Vaccine → 疫苗 (not 接种)
+- Clinical Trial → 临床试验
+      `.trim(),
       general: ''
     };
   }
