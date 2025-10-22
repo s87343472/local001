@@ -584,5 +584,13 @@ if (document.readyState === 'complete') {
   window.addEventListener('load', checkAutoTranslate);
 }
 
+// Cleanup MutationObserver on page unload to prevent memory leaks
+// Use pagehide event (recommended over beforeunload for Manifest V3)
+window.addEventListener('pagehide', () => {
+  console.log('[Content Script] Page unloading, cleaning up MutationObserver...');
+  renderer.stopObserving();
+  renderer.clearAll();
+});
+
 // Page loaded - ready for commands
 console.log('Content script ready');
