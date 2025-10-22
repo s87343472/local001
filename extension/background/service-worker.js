@@ -142,17 +142,34 @@ async function handleMessage(message, sender) {
 }
 
 // Context menu click handler
-chrome.contextMenus.onClicked.addListener((info, tab) => {
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId === 'translate-selection') {
-    chrome.tabs.sendMessage(tab.id, {
-      action: 'TRANSLATE_SELECTION',
-      data: { text: info.selectionText }
-    }, (response) => {
-      if (chrome.runtime.lastError) {
-        console.error('Failed to send message to tab:', chrome.runtime.lastError.message);
-        // Content script might not be loaded on this page (chrome://, file://, etc.)
+    try {
+      const response = await chrome.tabs.sendMessage(tab.id, {
+        action: 'TRANSLATE_SELECTION',
+        data: { text: info.selectionText }
+      });
+
+      if (response && response.success && response.result) {
+        // Show translation result in a notification
+        chrome.notifications.create({
+          type: 'basic',
+          iconUrl: chrome.runtime.getURL('assets/icon-48.png'),
+          title: 'Translation Result',
+          message: response.result.translation,
+          contextMessage: `Original: ${info.selectionText.substring(0, 50)}${info.selectionText.length > 50 ? '...' : ''}`,
+          priority: 1
+        });
+      } else {
+        console.error('Translation failed:', response?.error);
       }
-    });
+    } catch (error) {
+      console.error('Failed to translate selection:', error);
+      // Content script might not be loaded on this page
+      if (error.message && error.message.includes('not establish connection')) {
+        console.warn('Content script not loaded on this page');
+      }
+    }
   }
 });
 

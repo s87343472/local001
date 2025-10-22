@@ -273,6 +273,53 @@ function toggleTranslations() {
 }
 
 /**
+ * Translate selected text
+ * @param {string} text - Selected text to translate
+ * @returns {Promise<Object>} - Translation result
+ */
+async function translateSelection(text) {
+  if (!text || text.trim().length === 0) {
+    throw new Error('No text selected');
+  }
+
+  console.log('Translating selection:', text.substring(0, 50) + '...');
+
+  try {
+    // Create temporary paragraph for translation
+    const hash = simpleHash(text);
+    const paragraph = { text, hash };
+
+    // Check cache first
+    const cached = await checkCache([paragraph]);
+
+    if (cached[0].translation) {
+      console.log('Using cached translation');
+      return {
+        original: text,
+        translation: cached[0].translation,
+        engine: cached[0].engine || 'cache'
+      };
+    }
+
+    // Request fresh translation
+    const result = await requestTranslation([paragraph]);
+
+    if (result && result.length > 0 && result[0].translation) {
+      return {
+        original: text,
+        translation: result[0].translation,
+        engine: result[0].engine
+      };
+    } else {
+      throw new Error('Translation failed');
+    }
+  } catch (error) {
+    console.error('Selection translation error:', error);
+    throw error;
+  }
+}
+
+/**
  * Handle dynamically added content
  * @param {Array} addedNodes - New DOM nodes
  */
@@ -345,9 +392,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       return true; // Async response
 
     case 'TRANSLATE_SELECTION':
-      // TODO: Implement selection translation
-      console.log('Selection translation:', data.text);
-      sendResponse({ success: true });
+      translateSelection(data.text).then(result => {
+        sendResponse({ success: true, result });
+      }).catch(error => {
+        sendResponse({ success: false, error: error.message });
+      });
+      return true; // Async response
       break;
 
     default:
